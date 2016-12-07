@@ -6,7 +6,6 @@ module.exports = (pluginContext) => {
   function search (query, res) {
     //format query
     //add to res
-    var test = 1;
 }
 
   function execute (id, payload) {
