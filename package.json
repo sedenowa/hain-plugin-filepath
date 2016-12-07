@@ -1,0 +1,20 @@
+{
+  "author": "sedenowa",
+  "version": "0.0.1",
+  "description": "A simple plugin for Hain to open file or folder in explorer with its absolute path",
+  "keywords": [
+    "hain-0.5.0"
+  ],
+  "hain": {
+    "prefix": "/fp",
+    "usage": "type /fp and file or folder's path",
+    "icon": "#fa fa-link",
+    "redirect": "/fp "
+  }
+  "main": "index.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sedenowa/hain-plugin-filepath.git"
+  },
+}
