@@ -5,11 +5,16 @@ module.exports = (pluginContext) => {
 
 	function search (query, res) {
 		//format query.
-		var query_format = "xxx";
+		//remove spaces attached on head and bottom.
+		var query_trim = query.trim();
+
+		//
+		
 		//check the length of query
-		if (query_format.length === 0) {
+		if (query.trim().length === 0) {
 			return;
 		}
+		
 		//identify file or folder
 
 		//add to res.
@@ -17,7 +22,7 @@ module.exports = (pluginContext) => {
 			{
 				id: query_trim,
 				payload: 'open',
-				title: query_format,
+				title: query.trim(),
 				desc: "Open this File/Folder Path."
 			}
 		);
