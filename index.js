@@ -9,7 +9,7 @@ module.exports = (pluginContext) => {
 }
 
   function execute (id, payload) {
-    //identify file or folder 
+    //identify file or folder
     //open file or folder
     shell.openItem(`${id}`)
   }
