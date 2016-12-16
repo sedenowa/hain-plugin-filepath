@@ -1,23 +1,26 @@
 'use strict'
 
 module.exports = (pluginContext) => {
-	const shell = pluginContext.shell
+	const shell = pluginContext.shell;
 
 	function search (query, res) {
 		//format query.
-		const query_trim = query.trim()
-		if (query_trim.length === 0) {
-			return
+		var query_format = "xxx";
+		//check the length of query
+		if (query_format.length === 0) {
+			return;
 		}
 		//identify file or folder
 
 		//add to res.
-		res.add({
-			id: query_trim,
-			payload: 'open',
-			title: query_trim,
-			desc: 'Open this File/Folder Path.'
-		})
+		res.add(
+			{
+				id: query_trim,
+				payload: 'open',
+				title: query_format,
+				desc: "Open this File/Folder Path."
+			}
+		);
 	}
 
 	function execute (id, payload) {
@@ -25,9 +28,8 @@ module.exports = (pluginContext) => {
 		if (payload !== 'open') {
 			return
 		}
-		shell.openItem(`${id}`)
-		//shell.openExternal(`http://www.google.com/search?q=${id}`)
+		shell.openItem(`${id}`);
 	}
 
-	return { search, execute }
+	return { search, execute };
 }
