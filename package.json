@@ -11,7 +11,7 @@
 		"usage": "type /fp and file or folder's path",
 		"icon": "#fa fa-link",
 		"redirect": "/fp "
-	}
+	},
 	"main": "index.js",
 	"license": "MIT",
 	"repository": {
