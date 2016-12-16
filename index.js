@@ -16,7 +16,7 @@ module.exports = (pluginContext) => {
 			id: query_trim,
 			payload: 'open',
 			title: query_trim,
-			desc: 'Search on Google.com'
+			desc: 'Open this File/Folder Path.'
 		})
 	}
 
