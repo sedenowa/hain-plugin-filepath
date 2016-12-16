@@ -4,10 +4,14 @@ module.exports = (pluginContext) => {
 	const shell = pluginContext.shell
 
 	function search (query, res) {
+		//format query.
 		const query_trim = query.trim()
 		if (query_trim.length === 0) {
 			return
 		}
+		//identify file or folder
+
+		//add to res.
 		res.add({
 			id: query_trim,
 			payload: 'open',
@@ -17,6 +21,7 @@ module.exports = (pluginContext) => {
 	}
 
 	function execute (id, payload) {
+		//open file or folder.
 		if (payload !== 'open') {
 			return
 		}
