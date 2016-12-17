@@ -162,8 +162,13 @@ module.exports = (pluginContext) => {
 		var availableFullPathes = [];
 		searchAvailablePathConsideringUnnecessarySpace(availableFullPathes,"",splittedQuery);
 		
-		//(todo)sort available path candidates by distance between them and query.
+		//sort available path candidates by distance between them and query.
 		var sortedAvailableFullPathes = availableFullPathes.slice();
+		sortedAvailableFullPathes.sort(
+			function(a,b){
+				return ( (a[1] - b[1]) );
+			}
+		);
 
 		if(sortedAvailableFullPathes.length == 0){
 			if(queryRemovedUnavailableCharacters.length > 0){
