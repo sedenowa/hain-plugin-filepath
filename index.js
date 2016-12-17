@@ -158,35 +158,71 @@ module.exports = (pluginContext) => {
 		//split by '\'.
 		var splittedQuery = queryRemovedUnavailableCharacters.split('\\');
 		
-		//search available file/folder name. (considering needless space)
+		//search available file/folder name. (considering unnecessary space)
 		var availableFullPathes = [];
 		searchAvailablePathConsideringUnnecessarySpace(availableFullPathes,"",splittedQuery);
 		
-		//Check state of formatted path (File or Folder or not).
-		//and set Description Message according to the state.
-		var descriptionMessage = "";
-		switch(checkFileOrFolder(queryRemovedUnavailableCharacters)){
-			case -1://invalid
-			case 0://invalid
-				descriptionMessage = "Not File/Folder. Cannot open."
-				break;
-			case 1://file
-				descriptionMessage = "Open this File."
-				break;
-			case 2://folder
-				descriptionMessage = "Open this Folder."
-				break;
-		}
-		
-		//add to res.
-		res.add(
-			{
-				id: queryRemovedUnavailableCharacters,
-				payload: 'open',
-				title: queryRemovedUnavailableCharacters,
-				desc: descriptionMessage
+		//(todo)sort available path candidates by distance between them and query.
+		var sortedAvailableFullPathes = availableFullPathes.slice();
+
+		if(sortedAvailableFullPathes.length == 0){
+			if(queryRemovedUnavailableCharacters.length > 0){
+				var descriptionMessage = "Not File/Folder. Cannot open.";
+				//add to res.
+				res.add(
+					{
+						id: queryRemovedUnavailableCharacters,
+						payload: 'open',
+						title: queryRemovedUnavailableCharacters,
+						desc: descriptionMessage
+					}
+				);
+			}else{
+				res.add(
+					{
+						id: queryRemovedUnavailableCharacters,
+						payload: 'pending',
+						title: queryRemovedUnavailableCharacters,
+						desc: "Please input file or folder path."
+					}
+				);
 			}
-		);
+		}else{
+			for(var index = 0 , len = sortedAvailableFullPathes.length ; index < len ; index++){
+				//Check state of formatted path (File or Folder or not).
+				//and set Description Message according to the state.
+				var descriptionMessage = "";
+				var availableFullPath = sortedAvailableFullPathes[index][0].slice();
+				var distance = sortedAvailableFullPathes[index][1];
+				switch(checkFileOrFolder(availableFullPath)){
+					case -1://invalid
+					case 3://invalid
+						descriptionMessage = "Not File/Folder. Cannot open."
+						break;
+					case 1://file
+						//(todo) extract file name
+						var filename = "";
+						descriptionMessage = "Open this File : " + filename + 
+							"( Distance = " + distance + " )";
+						break;
+					case 2://folder
+						//(todo) extract folder name
+						var foldername = "";
+						descriptionMessage = "Open this Folder : " + foldername + 
+							"( Distance = " + distance + " )";
+						break;
+				}
+				//add to res.
+				res.add(
+					{
+						id: availableFullPath,
+						payload: 'open',
+						title: availableFullPath,
+						desc: descriptionMessage
+					}
+				);
+			}
+		}
 	}
 
 	function execute (id, payload) {
