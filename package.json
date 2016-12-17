@@ -1,8 +1,8 @@
 {
 	"name": "hain-plugin-filepath",
 	"author": "sedenowa",
-	"version": "0.0.2",
-	"description": "A simple plugin for Hain to open file or folder in explorer with its absolute path",
+	"version": "0.0.3",
+	"description": "A plugin for Hain to open file or folder in explorer with its absolute path",
 	"keywords": [
 		"hain-0.5.0"
 	],
