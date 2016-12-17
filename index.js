@@ -58,20 +58,13 @@ module.exports = (pluginContext) => {
 
 		//remove unavailable characters ( * / ? " < > | ).
 		var queryRemovedUnavailableCharacters = 
-			removeCharacters(trimmedQuery,['*','/','?',"\"","<",">","|"]);
+			removeCharacters(trimmedQuery,['*','/','?',"\"","<",">","|","\t"]);
 
 		//split by '\'.
-		var splitTest = tmpMessageForDebug.split('\\');
+		var splittedQuery = queryRemovedUnavailableCharacters.split('\\');
+		
+		//search available file/folder name. (considering needless space)
 
-		//add to res.
-		var tmpMessageForDebug = queryRemovedUnavailableCharacters;
-
-
-		//tmpMessageForDebug = tmpMessageForDebug.replace(/[\t]/g,"ddd");
-		tmpMessageForDebug = tmpMessageForDebug.replace(/[　]/g,"eee");
-		//tmpMessageForDebug = tmpMessageForDebug.replace(/[\s]/g,"aaa");//including ' ',\t,'　'
-		tmpMessageForDebug = tmpMessageForDebug.replace(/[\r]/g,"bbb");
-		tmpMessageForDebug = tmpMessageForDebug.replace(/[\n]/g,"ccc");
 
 		//Check state of formatted path (File or Folder or not).
 		//and set Description Message according to the state.
@@ -89,6 +82,7 @@ module.exports = (pluginContext) => {
 				break;
 		}
 		
+		//add to res.
 		res.add(
 			{
 				id: queryRemovedUnavailableCharacters,
