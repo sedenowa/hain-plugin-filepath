@@ -1,23 +1,81 @@
 'use strict'
 
 module.exports = (pluginContext) => {
-	const shell = pluginContext.shell
+	const shell = pluginContext.shell;
+	const clipboard = pluginContext.clipboard;
+	//to access filesystem
+	const fs = require('fs');
+	
+	//check if the file or folder exists
+	function checkFileOrFolder(path) {
+		try {
+			var stat = fs.statSync(path);
+			if(stat.isFile() == true){
+				return 1;//file
+			}else if(stat.isDirectory() == true){
+				return 2;//folder
+			}else{//unreachable
+				return 0;//invalid
+			}
+		} catch(err) {
+			if(err.code === 'ENOENT'){
+				return -1;//invalid
+			}
+		}
+	}
 
 	function search (query, res) {
 		//format query.
-		const query_trim = query.trim()
-		if (query_trim.length === 0) {
-			return
+		//remove spaces attached on head and bottom.
+		var query_trim = query.trim();
+
+		//search \n.
+		var foundNewLineFlag = false;
+		var queryTrimCopy = query_trim;
+		//queryTrimCopy = queryTrimCopy.replace(/[\t]/g,"aaa");
+		
+		//check the length of query
+		if (query.trim().length === 0) {
+			return;
 		}
+		
 		//identify file or folder
 
 		//add to res.
-		res.add({
-			id: query_trim,
-			payload: 'open',
-			title: query_trim,
-			desc: 'Open this File/Folder Path.'
-		})
+		var tmpMessageForDebug = queryTrimCopy;
+
+		var splitTest = tmpMessageForDebug.split('\\');
+
+		tmpMessageForDebug = tmpMessageForDebug.replace(/[\t]/g,"ddd");
+		tmpMessageForDebug = tmpMessageForDebug.replace(/[　]/g,"eee");
+		//tmpMessageForDebug = tmpMessageForDebug.replace(/[\s]/g,"aaa");//including ' ',\t,'　'
+		tmpMessageForDebug = tmpMessageForDebug.replace(/[\r]/g,"bbb");
+		tmpMessageForDebug = tmpMessageForDebug.replace(/[\n]/g,"ccc");
+
+		//Check state of formatted path (File or Folder or not).
+		//and set Description Message according to the state.
+		var descriptionMessage = "";
+		switch(checkFileOrFolder(query_trim)){
+			case -1://invalid
+			case 0://invalid
+				descriptionMessage = "Not File/Folder. Cannot open."
+				break;
+			case 1://file
+				descriptionMessage = "Open this File."
+				break;
+			case 2://folder
+				descriptionMessage = "Open this Folder."
+				break;
+		}
+		
+		res.add(
+			{
+				id: query_trim,
+				payload: 'open',
+				title: query_trim,
+				desc: descriptionMessage
+			}
+		);
 	}
 
 	function execute (id, payload) {
@@ -25,9 +83,9 @@ module.exports = (pluginContext) => {
 		if (payload !== 'open') {
 			return
 		}
-		shell.openItem(`${id}`)
-		//shell.openExternal(`http://www.google.com/search?q=${id}`)
+		//shell.beep();
+		shell.openItem(`${id}`);
 	}
 
-	return { search, execute }
+	return { search, execute };
 }
