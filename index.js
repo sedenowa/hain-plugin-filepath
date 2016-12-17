@@ -2,6 +2,27 @@
 
 module.exports = (pluginContext) => {
 	const shell = pluginContext.shell;
+	const clipboard = pluginContext.clipboard;
+	//to access filesystem
+	const fs = require('fs');
+	
+	//check if the file or folder exists
+	function checkFileOrFolder(path) {
+		try {
+			var stat = fs.statSync(path);
+			if(stat.isFile() == true){
+				return 1;//file
+			}else if(stat.isDirectory() == true){
+				return 2;//folder
+			}else{//unreachable
+				return 0;//invalid
+			}
+		} catch(err) {
+			if(err.code === 'ENOENT'){
+				return -1;//invalid
+			}
+		}
+	}
 
 	function search (query, res) {
 		//format query.
@@ -12,29 +33,6 @@ module.exports = (pluginContext) => {
 		var foundNewLineFlag = false;
 		var queryTrimCopy = query_trim;
 		//queryTrimCopy = queryTrimCopy.replace(/[\t]/g,"aaa");
-		/*
-		for (var index = 0; index < query_trim.length; index++ ){
-			//when \n is found
-			if(foundNewLineFlag == true){// if foundNewLineFlag == true;
-				//search next valid character (not ' ','　','\t','\n');
-				switch(query_trim[index]){
-					case ' ':
-					case '　':
-					case '\t':
-						//replace '\n'
-						queryTrimCopy[index] = 'a';
-						break;
-					default :
-						//do nothing
-						foundNewLineFlag = false;
-						break;
-				}
-			}else{
-				if(query_trim[index] == '\n'){
-					foundNewLineFlag = true;
-				}
-			}
-		}*/
 		
 		//check the length of query
 		if (query.trim().length === 0) {
@@ -45,20 +43,19 @@ module.exports = (pluginContext) => {
 
 		//add to res.
 		var tmpMessageForDebug = queryTrimCopy;
+
 		var splitTest = tmpMessageForDebug.split('\\');
+
 		tmpMessageForDebug = tmpMessageForDebug.replace(/[\t]/g,"ddd");
 		tmpMessageForDebug = tmpMessageForDebug.replace(/[　]/g,"eee");
-		//tmpMessageForDebug = tmpMessageForDebug.replace(/[\s]/g,"aaa");
+		//tmpMessageForDebug = tmpMessageForDebug.replace(/[\s]/g,"aaa");//including ' ',\t,'　'
 		tmpMessageForDebug = tmpMessageForDebug.replace(/[\r]/g,"bbb");
 		tmpMessageForDebug = tmpMessageForDebug.replace(/[\n]/g,"ccc");
 		
-		tmpMessageForDebug = "";
-		for (var index = 0;index < splitTest.length; index++){
-			tmpMessageForDebug += splitTest[index] + "xxx";
-		}
+		tmpMessageForDebug = queryTrimCopy.fileSize;
 		res.add(
 			{
-				id: queryTrimCopy,
+				id: query_trim,
 				payload: 'open',
 				title: tmpMessageForDebug,
 				desc: "Open this File/Folder Path."
@@ -71,6 +68,7 @@ module.exports = (pluginContext) => {
 		if (payload !== 'open') {
 			return
 		}
+		//shell.beep();
 		shell.openItem(`${id}`);
 	}
 
