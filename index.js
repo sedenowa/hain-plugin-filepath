@@ -51,14 +51,29 @@ module.exports = (pluginContext) => {
 		//tmpMessageForDebug = tmpMessageForDebug.replace(/[\s]/g,"aaa");//including ' ',\t,'　'
 		tmpMessageForDebug = tmpMessageForDebug.replace(/[\r]/g,"bbb");
 		tmpMessageForDebug = tmpMessageForDebug.replace(/[\n]/g,"ccc");
+
+		//Check state of formatted path (File or Folder or not).
+		//and set Description Message according to the state.
+		var descriptionMessage = "";
+		switch(checkFileOrFolder(query_trim)){
+			case -1://invalid
+			case 0://invalid
+				descriptionMessage = "Not File/Folder. Cannot open."
+				break;
+			case 1://file
+				descriptionMessage = "Open this File."
+				break;
+			case 2://folder
+				descriptionMessage = "Open this Folder."
+				break;
+		}
 		
-		tmpMessageForDebug = queryTrimCopy.fileSize;
 		res.add(
 			{
 				id: query_trim,
 				payload: 'open',
-				title: tmpMessageForDebug,
-				desc: "Open this File/Folder Path."
+				title: query_trim,
+				desc: descriptionMessage
 			}
 		);
 	}
