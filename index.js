@@ -7,6 +7,7 @@ module.exports = (pluginContext) => {
 	const fs = require('fs');
 	
 	//check if the file or folder exists
+	//return 1:File 2:Folder -1,0:Invalid path
 	function checkFileOrFolder(path) {
 		try {
 			var stat = fs.statSync(path);
@@ -24,29 +25,49 @@ module.exports = (pluginContext) => {
 		}
 	}
 
+	//remove all specified characters from string
+	//return string (removed characters).
+	//arguments are not modified.
+	function removeCharacters(targetString,removingCharacterArray){
+		var copyOfTargetString = targetString;
+		for(var index = 0 ; index < removingCharacterArray.length ; index++){
+			var removingCharacter = removingCharacterArray[index];
+			switch(removingCharacter){
+				case "*":
+				case "?":
+				case "|":
+					//add '\' to characters which need '\' 
+					removingCharacter = "\\" + removingCharacter;
+				default:
+					//do nothing.
+					break;
+			}
+			copyOfTargetString = 
+				copyOfTargetString.replace(
+					new RegExp(removingCharacter,"g")
+					,""
+				);
+		}
+		return copyOfTargetString;
+	}
+	
 	function search (query, res) {
 		//format query.
 		//remove spaces attached on head and bottom.
-		var query_trim = query.trim();
+		var trimmedQuery = query.trim();
 
-		//search \n.
-		var foundNewLineFlag = false;
-		var queryTrimCopy = query_trim;
-		//queryTrimCopy = queryTrimCopy.replace(/[\t]/g,"aaa");
-		
-		//check the length of query
-		if (query.trim().length === 0) {
-			return;
-		}
-		
-		//identify file or folder
+		//remove unavailable characters ( * / ? " < > | ).
+		var queryRemovedUnavailableCharacters = 
+			removeCharacters(trimmedQuery,['*','/','?',"\"","<",">","|"]);
 
-		//add to res.
-		var tmpMessageForDebug = queryTrimCopy;
-
+		//split by '\'.
 		var splitTest = tmpMessageForDebug.split('\\');
 
-		tmpMessageForDebug = tmpMessageForDebug.replace(/[\t]/g,"ddd");
+		//add to res.
+		var tmpMessageForDebug = queryRemovedUnavailableCharacters;
+
+
+		//tmpMessageForDebug = tmpMessageForDebug.replace(/[\t]/g,"ddd");
 		tmpMessageForDebug = tmpMessageForDebug.replace(/[　]/g,"eee");
 		//tmpMessageForDebug = tmpMessageForDebug.replace(/[\s]/g,"aaa");//including ' ',\t,'　'
 		tmpMessageForDebug = tmpMessageForDebug.replace(/[\r]/g,"bbb");
@@ -55,7 +76,7 @@ module.exports = (pluginContext) => {
 		//Check state of formatted path (File or Folder or not).
 		//and set Description Message according to the state.
 		var descriptionMessage = "";
-		switch(checkFileOrFolder(query_trim)){
+		switch(checkFileOrFolder(queryRemovedUnavailableCharacters)){
 			case -1://invalid
 			case 0://invalid
 				descriptionMessage = "Not File/Folder. Cannot open."
@@ -70,9 +91,9 @@ module.exports = (pluginContext) => {
 		
 		res.add(
 			{
-				id: query_trim,
+				id: queryRemovedUnavailableCharacters,
 				payload: 'open',
-				title: query_trim,
+				title: queryRemovedUnavailableCharacters,
 				desc: descriptionMessage
 			}
 		);
@@ -83,7 +104,6 @@ module.exports = (pluginContext) => {
 		if (payload !== 'open') {
 			return
 		}
-		//shell.beep();
 		shell.openItem(`${id}`);
 	}
 
