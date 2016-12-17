@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 C:\Users\‚Ì‚í\Desktop\testf	
 
 x@x
@@ -36,3 +37,11 @@ a
 a
 
 
+=======
+C:\Users\‚Ì‚í\Desktop\testfolder\test.txt
+
+a
+a
+a
+
+>>>>>>> origin/master
