@@ -205,16 +205,18 @@ module.exports = (pluginContext) => {
 						descriptionMessage = "Not File/Folder. Cannot open."
 						break;
 					case 1://file
-						//(todo) extract file name
-						var filename = "";
-						descriptionMessage = "Open this File : " + filename + 
-							"( Distance = " + distance + " )";
+						//extract file name
+						//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
+						var filename = availableFullPath.slice().split("\\").pop();
+						descriptionMessage = "Open this File : \"" + filename + 
+							"\" ( Distance = " + distance + " )";
 						break;
 					case 2://folder
-						//(todo) extract folder name
-						var foldername = "";
-						descriptionMessage = "Open this Folder : " + foldername + 
-							"( Distance = " + distance + " )";
+						//extract folder name
+						//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
+						var foldername = availableFullPath.slice().split("\\").pop();	
+						descriptionMessage = "Open this Folder : \"" + foldername + 
+							"\" ( Distance = " + distance + " )";
 						break;
 				}
 				//add to res.
