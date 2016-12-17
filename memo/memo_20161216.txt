@@ -6,32 +6,7 @@ older\test.txt
  
 
 
-C:\Users\‚Ì‚í\Desktop\testf	
-
-older\test.txt
- 			tmpMessageForDebug
-
-a
-
-a
-
-a
-
-a
-
-a
-
-a
-
-a
-
-a
-
-a
-
-a
-
-
+C:\Users\‚Ì‚í\Desktop\testf	><older\test.txt	?|		
 =======
 C:\Users\‚Ì‚í\Desktop\testfolder\test.txt
 
