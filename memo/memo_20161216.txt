@@ -8,12 +8,7 @@ older\test.txt
 
 C:\Users\‚Ì‚í\Desktop\testf	
 
-x@x
 older\test.txt
- 
- 
- 
- 
  			tmpMessageForDebug
 
 a

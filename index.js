@@ -7,6 +7,7 @@ module.exports = (pluginContext) => {
 	const fs = require('fs');
 	
 	//check if the file or folder exists
+	//return 1:File 2:Folder -1,0:Invalid path
 	function checkFileOrFolder(path) {
 		try {
 			var stat = fs.statSync(path);
@@ -24,58 +25,204 @@ module.exports = (pluginContext) => {
 		}
 	}
 
+	//remove all specified characters from string
+	//return string (removed characters).
+	//arguments are not modified.
+	function removeCharacters(targetString,removingCharacterArray){
+		var copyOfTargetString = targetString;
+		for(var index = 0 ; index < removingCharacterArray.length ; index++){
+			var removingCharacter = removingCharacterArray[index];
+			switch(removingCharacter){
+				case "*":
+				case "?":
+				case "|":
+					//add '\' to characters which need '\' 
+					removingCharacter = "\\" + removingCharacter;
+				default:
+					//do nothing.
+					break;
+			}
+			copyOfTargetString = 
+				copyOfTargetString.replace(
+					new RegExp(removingCharacter,"g")
+					,""
+				);
+		}
+		return copyOfTargetString;
+	}
+	
+	//search available path (considering unnecessary space)
+	function searchAvailablePathConsideringUnnecessarySpace(
+		availableFullPathes, availableCurrentPath , splittedRemainingPath
+	){
+		
+	}
+	
+	//check the position of space(' ' or '　').
+	//return array of positions.
+	function checkPositionOfSpaces(targetString){
+		var positionOfSpaces = [];
+		for(var index = 0 , len = targetString.length ; index < len; index++){
+			if((targetString[index] == ' ') || (targetString[index] == '　' )){
+				positionOfSpaces.push(index);
+			}
+		}
+		return positionOfSpaces;
+	}
+
+	function searchAvailablePathConsideringUnnecessarySpace(
+		availableFullPathes, availableCurrentPath , splittedRemainingPath
+	){
+		searchAvailablePathConsideringUnnecessarySpaceWithDistance(
+			availableFullPathes, availableCurrentPath , splittedRemainingPath , 0
+		);
+	}
+
+	function searchAvailablePathConsideringUnnecessarySpaceWithDistance(
+		availableFullPathes, availableCurrentPath , splittedRemainingPath , currentDistance
+	){
+		if(splittedRemainingPath.length > 0){
+			var targetPath = splittedRemainingPath[0];
+			var checkingPath = "";
+			if(availableCurrentPath == ""){
+				checkingPath = targetPath;
+			}else{
+				checkingPath = availableCurrentPath + "\\" + targetPath;
+			}
+			switch(checkFileOrFolder(checkingPath)){
+				case -1:
+				case 3:
+					//do nothing
+					break;
+				case 1://Available File
+				case 2://Available Folder
+					var shiftedSplittedRemainingPath = splittedRemainingPath.slice();
+					shiftedSplittedRemainingPath.shift();
+					var nextAvailableCurrentPath = checkingPath;
+					var nextDistance = currentDistance;
+					searchAvailablePathConsideringUnnecessarySpaceWithDistance(
+						availableFullPathes, nextAvailableCurrentPath,
+						shiftedSplittedRemainingPath, nextDistance
+					);
+					break;
+				default:
+					//do nothing
+					break;
+			}
+
+			//count the number of ' ' and '　'.
+			var positionOfSpaces = checkPositionOfSpaces(targetPath);
+			var numberOfSpaces = positionOfSpaces.length;
+			if(numberOfSpaces > 0){
+				//remove one of spaces and check the path. 
+				for(var index = 0; index < numberOfSpaces; index++){
+					var nextSplittedRemainingPath = splittedRemainingPath;
+					var firstHalfOfTargetPathRemovedSpace = targetPath;
+					var latterHalfOfTargetPathRemovedSpace = targetPath;
+					var targetPathRemovedSpace = 
+						firstHalfOfTargetPathRemovedSpace.slice(0,positionOfSpaces[index]) + 
+						latterHalfOfTargetPathRemovedSpace.slice(positionOfSpaces[index]+1);
+					nextSplittedRemainingPath[0] = targetPathRemovedSpace;
+					var nextDistance = currentDistance + 1;
+					var nextAvailableCurrentPath = availableCurrentPath;
+					searchAvailablePathConsideringUnnecessarySpaceWithDistance(
+						availableFullPathes, nextAvailableCurrentPath,
+						nextSplittedRemainingPath, nextDistance
+					);
+				}
+			}
+		}else{
+			//check if the availableCurrentPath is already added.
+			var alreadyExistFlag = false;
+			for(var index = 0, len = availableFullPathes.length; index < len ; index++){
+				if(availableFullPathes[index][0] == availableCurrentPath){
+					alreadyExistFlag = true;
+				}
+			}
+			if(alreadyExistFlag == false){
+				availableFullPathes.push([availableCurrentPath , currentDistance]);
+				console.log("Added : " + availableCurrentPath + " - Distance : " + currentDistance);
+			}
+		}
+	}
+	
 	function search (query, res) {
 		//format query.
 		//remove spaces attached on head and bottom.
-		var query_trim = query.trim();
+		var trimmedQuery = query.trim();
 
-		//search \n.
-		var foundNewLineFlag = false;
-		var queryTrimCopy = query_trim;
-		//queryTrimCopy = queryTrimCopy.replace(/[\t]/g,"aaa");
+		//remove unavailable characters ( * / ? " < > | ).
+		var queryRemovedUnavailableCharacters = 
+			removeCharacters(trimmedQuery,['*','/','?',"\"","<",">","|","\t"]);
+
+		//split by '\'.
+		var splittedQuery = queryRemovedUnavailableCharacters.split('\\');
 		
-		//check the length of query
-		if (query.trim().length === 0) {
-			return;
-		}
+		//search available file/folder name. (considering unnecessary space)
+		var availableFullPathes = [];
+		searchAvailablePathConsideringUnnecessarySpace(availableFullPathes,"",splittedQuery);
 		
-		//identify file or folder
+		//(todo)sort available path candidates by distance between them and query.
+		var sortedAvailableFullPathes = availableFullPathes.slice();
 
-		//add to res.
-		var tmpMessageForDebug = queryTrimCopy;
-
-		var splitTest = tmpMessageForDebug.split('\\');
-
-		tmpMessageForDebug = tmpMessageForDebug.replace(/[\t]/g,"ddd");
-		tmpMessageForDebug = tmpMessageForDebug.replace(/[　]/g,"eee");
-		//tmpMessageForDebug = tmpMessageForDebug.replace(/[\s]/g,"aaa");//including ' ',\t,'　'
-		tmpMessageForDebug = tmpMessageForDebug.replace(/[\r]/g,"bbb");
-		tmpMessageForDebug = tmpMessageForDebug.replace(/[\n]/g,"ccc");
-
-		//Check state of formatted path (File or Folder or not).
-		//and set Description Message according to the state.
-		var descriptionMessage = "";
-		switch(checkFileOrFolder(query_trim)){
-			case -1://invalid
-			case 0://invalid
-				descriptionMessage = "Not File/Folder. Cannot open."
-				break;
-			case 1://file
-				descriptionMessage = "Open this File."
-				break;
-			case 2://folder
-				descriptionMessage = "Open this Folder."
-				break;
-		}
-		
-		res.add(
-			{
-				id: query_trim,
-				payload: 'open',
-				title: query_trim,
-				desc: descriptionMessage
+		if(sortedAvailableFullPathes.length == 0){
+			if(queryRemovedUnavailableCharacters.length > 0){
+				var descriptionMessage = "Not File/Folder. Cannot open.";
+				//add to res.
+				res.add(
+					{
+						id: queryRemovedUnavailableCharacters,
+						payload: 'open',
+						title: queryRemovedUnavailableCharacters,
+						desc: descriptionMessage
+					}
+				);
+			}else{
+				res.add(
+					{
+						id: queryRemovedUnavailableCharacters,
+						payload: 'pending',
+						title: queryRemovedUnavailableCharacters,
+						desc: "Please input file or folder path."
+					}
+				);
 			}
-		);
+		}else{
+			for(var index = 0 , len = sortedAvailableFullPathes.length ; index < len ; index++){
+				//Check state of formatted path (File or Folder or not).
+				//and set Description Message according to the state.
+				var descriptionMessage = "";
+				var availableFullPath = sortedAvailableFullPathes[index][0].slice();
+				var distance = sortedAvailableFullPathes[index][1];
+				switch(checkFileOrFolder(availableFullPath)){
+					case -1://invalid
+					case 3://invalid
+						descriptionMessage = "Not File/Folder. Cannot open."
+						break;
+					case 1://file
+						//(todo) extract file name
+						var filename = "";
+						descriptionMessage = "Open this File : " + filename + 
+							"( Distance = " + distance + " )";
+						break;
+					case 2://folder
+						//(todo) extract folder name
+						var foldername = "";
+						descriptionMessage = "Open this Folder : " + foldername + 
+							"( Distance = " + distance + " )";
+						break;
+				}
+				//add to res.
+				res.add(
+					{
+						id: availableFullPath,
+						payload: 'open',
+						title: availableFullPath,
+						desc: descriptionMessage
+					}
+				);
+			}
+		}
 	}
 
 	function execute (id, payload) {
@@ -83,7 +230,6 @@ module.exports = (pluginContext) => {
 		if (payload !== 'open') {
 			return
 		}
-		//shell.beep();
 		shell.openItem(`${id}`);
 	}
 
