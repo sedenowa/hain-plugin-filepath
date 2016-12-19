@@ -74,12 +74,13 @@ module.exports = (pluginContext) => {
 		availableFullPathes, availableCurrentPath , splittedRemainingPath
 	){
 		searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-			availableFullPathes, availableCurrentPath , splittedRemainingPath , 0
+			availableFullPathes, availableCurrentPath , splittedRemainingPath , 0 , []
 		);
 	}
 
 	function searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-		availableFullPathes, availableCurrentPath , splittedRemainingPath , currentDistance
+		availableFullPathes, availableCurrentPath , splittedRemainingPath , 
+		 currentDistance , alreadyCheckedPathes
 	){
 		if(splittedRemainingPath.length > 0){
 			var targetPath = splittedRemainingPath[0];
@@ -89,25 +90,38 @@ module.exports = (pluginContext) => {
 			}else{
 				checkingPath = availableCurrentPath + "\\" + targetPath;
 			}
-			switch(checkFileOrFolder(checkingPath)){
-				case -1:
-				case 3:
-					//do nothing
-					break;
-				case 1://Available File
-				case 2://Available Folder
-					var shiftedSplittedRemainingPath = splittedRemainingPath.slice();
-					shiftedSplittedRemainingPath.shift();
-					var nextAvailableCurrentPath = checkingPath;
-					var nextDistance = currentDistance;
-					searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-						availableFullPathes, nextAvailableCurrentPath,
-						shiftedSplittedRemainingPath, nextDistance
-					);
-					break;
-				default:
-					//do nothing
-					break;
+			//check the path if it is checked at first
+			var alreadyCheckedFlag = false;
+			for(var index = 0 , len = alreadyCheckedPathes.length ; index < len ; index++){
+				if(alreadyCheckedPathes[index] == checkingPath){
+					alreadyCheckedFlag = true;
+				}
+			}
+			//check only when the path is checked at first
+			if(alreadyCheckedFlag == false){
+				alreadyCheckedPathes.push(checkingPath);
+				switch(checkFileOrFolder(checkingPath)){
+					case -1:
+					case 3:
+						//do nothing
+						break;
+					case 1://Available File
+					case 2://Available Folder
+						var shiftedSplittedRemainingPath = splittedRemainingPath.slice();
+						shiftedSplittedRemainingPath.shift();
+						var nextAvailableCurrentPath = checkingPath;
+						var nextDistance = currentDistance;
+						searchAvailablePathConsideringUnnecessarySpaceWithDistance(
+							availableFullPathes, nextAvailableCurrentPath,
+							shiftedSplittedRemainingPath, nextDistance , alreadyCheckedPathes
+						);
+						break;
+					default:
+						//do nothing
+						break;
+				}
+			}else{
+				//do nothing
 			}
 
 			//count the number of ' ' and '　'.
@@ -125,10 +139,27 @@ module.exports = (pluginContext) => {
 					nextSplittedRemainingPath[0] = targetPathRemovedSpace;
 					var nextDistance = currentDistance + 1;
 					var nextAvailableCurrentPath = availableCurrentPath;
-					searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-						availableFullPathes, nextAvailableCurrentPath,
-						nextSplittedRemainingPath, nextDistance
-					);
+
+					//check the path if it is checked at first
+					var alreadyCheckedFlag = false;
+					for(var index = 0 , len = alreadyCheckedPathes.length ; index < len ; index++){
+						if(alreadyCheckedPathes[index] == checkingPath){
+							alreadyCheckedFlag = true;
+						}
+					}
+					//check only when the path is checked at first
+					var alreadyCheckedFlag = false;
+					for(var index = 0 , len = alreadyCheckedPathes.length ; index < len ; index++){
+						if(alreadyCheckedPathes[index] == nextAvailableCurrentPath + "\\" + targetPathRemovedSpace){
+							alreadyCheckedFlag = true;
+						}
+					}
+					if(alreadyCheckedFlag == false){
+						searchAvailablePathConsideringUnnecessarySpaceWithDistance(
+							availableFullPathes, nextAvailableCurrentPath,
+							nextSplittedRemainingPath, nextDistance , alreadyCheckedPathes
+						);
+					}
 				}
 			}
 		}else{
@@ -141,7 +172,6 @@ module.exports = (pluginContext) => {
 			}
 			if(alreadyExistFlag == false){
 				availableFullPathes.push([availableCurrentPath , currentDistance]);
-				console.log("Added : " + availableCurrentPath + " - Distance : " + currentDistance);
 			}
 		}
 	}
