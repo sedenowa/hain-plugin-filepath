@@ -52,13 +52,6 @@ module.exports = (pluginContext) => {
 		return copyOfTargetString;
 	}
 	
-	//search available path (considering unnecessary space)
-	function searchAvailablePathConsideringUnnecessarySpace(
-		availableFullPathes, availableCurrentPath , splittedRemainingPath
-	){
-		
-	}
-	
 	//check the position of space(' ' or '　').
 	//return array of positions.
 	function checkPositionOfSpaces(targetString){
@@ -71,108 +64,128 @@ module.exports = (pluginContext) => {
 		return positionOfSpaces;
 	}
 
+	//search available path (considering unnecessary space)
 	function searchAvailablePathConsideringUnnecessarySpace(
 		availableFullPathes, availableCurrentPath , splittedRemainingPath
 	){
 		searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-			availableFullPathes, availableCurrentPath , splittedRemainingPath , 0 , []
+			availableCurrentPath , splittedRemainingPath , availableFullPathes, [] , 0
 		);
 	}
 
 	function searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-		availableFullPathes, availableCurrentPath , splittedRemainingPath , 
-		 currentDistance , alreadyCheckedPathes
+		availableCurrentPath , splittedRemainingPath , availableFullPathes, 
+		 alreadyCheckedPathes , currentDistance
 	){
-		if(splittedRemainingPath.length > 0){
-			var targetPath = splittedRemainingPath[0];
-			var checkingPath = "";
+		//check if splittedRemainingPath is empty
+		if(splittedRemainingPath.length == 0){
+			//check if availableCurrentPath is empty
 			if(availableCurrentPath == ""){
-				checkingPath = targetPath;
+				//exit
+				return;
 			}else{
-				checkingPath = availableCurrentPath + "\\" + targetPath;
+				//check if availableCurrentPath is already added to availableFullPathes
+				if(availableFullPathes.indexOf([availableCurrentPath , currentDistance]) == -1){
+					//add availableCurrentPath to availableFullPathes
+					availableFullPathes.push([availableCurrentPath , currentDistance]);
+				}
+			}
+		}else{
+			//store path to check next.
+			var checkingPath = splittedRemainingPath[0];
+			//check if checkingPath contain space
+			var positionOfSpaces = checkPositionOfSpaces(checkingPath);
+			if(positionOfSpaces.length > 0){
+				for(var index = 0 , len = positionOfSpaces.length ; index < len ; index++){
+					//remove one of the spaces from checkingPath.
+					var firstHalfOfCheckingPathRemovedSpace = checkingPath;
+					var latterHalfOfCheckingPathRemovedSpace = checkingPath;
+					var checkingPathRemovedSpace = 
+						firstHalfOfCheckingPathRemovedSpace.slice(0,positionOfSpaces[index]) + 
+						latterHalfOfCheckingPathRemovedSpace.slice(positionOfSpaces[index]+1);
+					//copy splittedRemainingPath
+					var nextSplittedRemainingPath = splittedRemainingPath.slice();
+					//check if checkingPathRemovedSpace is empty
+					if(checkingPathRemovedSpace == ""){
+						nextSplittedRemainingPath.shift();
+					}else{
+						nextSplittedRemainingPath[0] = checkingPathRemovedSpace;
+					}
+					//increment distance 
+					var nextDistance = currentDistance + 1;
+					var nextAvailableCurrentPath = availableCurrentPath;
+
+					//set the full path to check
+					var checkingFullPath = "";
+					if(availableCurrentPath == ""){
+						checkingFullPath = checkingPath;
+					}else{
+						checkingFullPath = availableCurrentPath + "\\" + checkingPath;
+					}
+					//check the path if it is checked at first
+					var alreadyCheckedFlag = false;
+					if(alreadyCheckedPathes.indexOf(checkingFullPath) >= 0){
+						alreadyCheckedFlag = true;
+					}
+
+					if(alreadyCheckedFlag == true){
+						//exit
+						return;
+					}else{
+						//when the path is checked at first
+						//call this function recursively
+						searchAvailablePathConsideringUnnecessarySpaceWithDistance(
+							nextAvailableCurrentPath , nextSplittedRemainingPath ,
+							availableFullPathes, alreadyCheckedPathes , nextDistance
+						);
+					}
+				}
+			}
+			//set the full path to check
+			var checkingFullPath = "";
+			if(availableCurrentPath == ""){
+				checkingFullPath = checkingPath;
+			}else{
+				checkingFullPath = availableCurrentPath + "\\" + checkingPath;
 			}
 			//check the path if it is checked at first
 			var alreadyCheckedFlag = false;
-			for(var index = 0 , len = alreadyCheckedPathes.length ; index < len ; index++){
-				if(alreadyCheckedPathes[index] == checkingPath){
-					alreadyCheckedFlag = true;
-				}
+			if(alreadyCheckedPathes.indexOf(checkingFullPath) >= 0){
+				alreadyCheckedFlag = true;
 			}
-			//check only when the path is checked at first
-			if(alreadyCheckedFlag == false){
-				alreadyCheckedPathes.push(checkingPath);
-				switch(checkFileOrFolder(checkingPath)){
+
+			if(alreadyCheckedFlag == true){
+				//exit
+				return;
+			}else{
+				//when the path is checked at first
+				//add to pathes which are already checked
+				alreadyCheckedPathes.push(checkingFullPath);
+				//check the existence of the full path 
+				switch(checkFileOrFolder(checkingFullPath)){
 					case -1:
 					case 3:
 						//do nothing
+						return;
 						break;
 					case 1://Available File
 					case 2://Available Folder
+						//copy splittedRemainingPath
 						var shiftedSplittedRemainingPath = splittedRemainingPath.slice();
 						shiftedSplittedRemainingPath.shift();
-						var nextAvailableCurrentPath = checkingPath;
+						var nextAvailableCurrentPath = checkingFullPath;
 						var nextDistance = currentDistance;
+						//call this function recursively
 						searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-							availableFullPathes, nextAvailableCurrentPath,
-							shiftedSplittedRemainingPath, nextDistance , alreadyCheckedPathes
+							nextAvailableCurrentPath , shiftedSplittedRemainingPath ,
+							availableFullPathes, alreadyCheckedPathes , nextDistance
 						);
 						break;
 					default:
 						//do nothing
+						return;
 						break;
 				}
-			}else{
-				//do nothing
-			}
-
-			//count the number of ' ' and '　'.
-			var positionOfSpaces = checkPositionOfSpaces(targetPath);
-			var numberOfSpaces = positionOfSpaces.length;
-			if(numberOfSpaces > 0){
-				//remove one of spaces and check the path. 
-				for(var index = 0; index < numberOfSpaces; index++){
-					var nextSplittedRemainingPath = splittedRemainingPath;
-					var firstHalfOfTargetPathRemovedSpace = targetPath;
-					var latterHalfOfTargetPathRemovedSpace = targetPath;
-					var targetPathRemovedSpace = 
-						firstHalfOfTargetPathRemovedSpace.slice(0,positionOfSpaces[index]) + 
-						latterHalfOfTargetPathRemovedSpace.slice(positionOfSpaces[index]+1);
-					nextSplittedRemainingPath[0] = targetPathRemovedSpace;
-					var nextDistance = currentDistance + 1;
-					var nextAvailableCurrentPath = availableCurrentPath;
-
-					//check the path if it is checked at first
-					var alreadyCheckedFlag = false;
-					for(var index = 0 , len = alreadyCheckedPathes.length ; index < len ; index++){
-						if(alreadyCheckedPathes[index] == checkingPath){
-							alreadyCheckedFlag = true;
-						}
-					}
-					//check only when the path is checked at first
-					var alreadyCheckedFlag = false;
-					for(var index = 0 , len = alreadyCheckedPathes.length ; index < len ; index++){
-						if(alreadyCheckedPathes[index] == nextAvailableCurrentPath + "\\" + targetPathRemovedSpace){
-							alreadyCheckedFlag = true;
-						}
-					}
-					if(alreadyCheckedFlag == false){
-						searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-							availableFullPathes, nextAvailableCurrentPath,
-							nextSplittedRemainingPath, nextDistance , alreadyCheckedPathes
-						);
-					}
-				}
-			}
-		}else{
-			//check if the availableCurrentPath is already added.
-			var alreadyExistFlag = false;
-			for(var index = 0, len = availableFullPathes.length; index < len ; index++){
-				if(availableFullPathes[index][0] == availableCurrentPath){
-					alreadyExistFlag = true;
-				}
-			}
-			if(alreadyExistFlag == false){
-				availableFullPathes.push([availableCurrentPath , currentDistance]);
 			}
 		}
 	}
