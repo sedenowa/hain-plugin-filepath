@@ -5,6 +5,7 @@ module.exports = (pluginContext) => {
 	const clipboard = pluginContext.clipboard;
 	//to access filesystem
 	const fs = require('fs');
+	const path = require('path');
 	
 	//check if the file or folder exists
 	//return 1:File 2:Folder -1,0:Invalid path
@@ -175,7 +176,7 @@ module.exports = (pluginContext) => {
 			}
 		}
 	}
-	
+
 	function search (query, res) {
 		//format query.
 		//remove spaces attached on head and bottom.
@@ -185,8 +186,32 @@ module.exports = (pluginContext) => {
 		var queryRemovedUnavailableCharacters = 
 			removeCharacters(trimmedQuery,['*','/','?',"\"","<",">","|","\t"]);
 
-		//split by '\'.
-		var splittedQuery = queryRemovedUnavailableCharacters.split('\\');
+		//normalize
+		var normalizedQuery = queryRemovedUnavailableCharacters;
+		if(normalizedQuery == "."){
+			normalizedQuery = "";
+		}
+		
+		//check if the path is file server.
+		var isFileServer = false;
+		if(normalizedQuery.indexOf("\\\\") == 0){
+			isFileServer = true;
+			normalizedQuery.substring(("\\\\").length);
+		}
+
+		//split by separator('\' or '/').
+		var splittedQuery = normalizedQuery.split(path.sep);
+		
+		//remove empty element in splittedQuery.
+		var splittedQuery = splittedQuery.filter(function(e){return e !== "";});
+		
+		//if isFileServer is true, combine 1st and 2nd element.
+		if(isFileServer == true){
+			if(splittedQuery.length >= 2){
+				splittedQuery[1] = "\\\\" + splittedQuery[0] + "\\" + splittedQuery[1];
+				splittedQuery.shift();
+			}
+		}
 		
 		//search available file/folder name. (considering unnecessary space)
 		var availableFullPathes = [];
