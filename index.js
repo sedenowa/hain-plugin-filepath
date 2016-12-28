@@ -5,6 +5,7 @@ module.exports = (pluginContext) => {
 	const clipboard = pluginContext.clipboard;
 	//to access filesystem
 	const fs = require('fs');
+	const path = require('path');
 	
 	//check if the file or folder exists
 	//return 1:File 2:Folder -1,0:Invalid path
@@ -175,7 +176,7 @@ module.exports = (pluginContext) => {
 			}
 		}
 	}
-	
+
 	function search (query, res) {
 		//format query.
 		//remove spaces attached on head and bottom.
@@ -185,8 +186,34 @@ module.exports = (pluginContext) => {
 		var queryRemovedUnavailableCharacters = 
 			removeCharacters(trimmedQuery,['*','/','?',"\"","<",">","|","\t"]);
 
-		//split by '\'.
-		var splittedQuery = queryRemovedUnavailableCharacters.split('\\');
+		//normalize
+		var normalizedQuery = queryRemovedUnavailableCharacters;
+		if(normalizedQuery == "."){
+			normalizedQuery = "";
+		}
+		
+		//check if the path is file server.
+		var isFileServer = false;
+		if(normalizedQuery.indexOf("\\\\") == 0){
+			isFileServer = true;
+			normalizedQuery.substring(("\\\\").length);
+		}
+
+		//split by separator('\' or '/').
+		var splittedQuery = normalizedQuery.split(path.sep);
+		
+		//remove empty element in splittedQuery.
+		var splittedQuery = splittedQuery.filter(function(e){return e !== "";});
+		
+		//if isFileServer is true, combine 1st and 2nd element.
+		if(isFileServer == true){
+			if(splittedQuery.length >= 2){
+				splittedQuery[1] = "\\\\" + splittedQuery[0] + "\\" + splittedQuery[1];
+				splittedQuery.shift();
+			}else if (splittedQuery.length == 1){
+				splittedQuery[0] = "\\\\" + splittedQuery[0];
+			}
+		}
 		
 		//search available file/folder name. (considering unnecessary space)
 		var availableFullPathes = [];
@@ -201,23 +228,23 @@ module.exports = (pluginContext) => {
 		);
 
 		if(sortedAvailableFullPathes.length == 0){
-			if(queryRemovedUnavailableCharacters.length > 0){
+			if(normalizedQuery.length > 0){
 				var descriptionMessage = "Not File/Folder. Cannot open.";
 				//add to res.
 				res.add(
 					{
-						id: queryRemovedUnavailableCharacters,
+						id: normalizedQuery,
 						payload: 'open',
-						title: queryRemovedUnavailableCharacters,
+						title: normalizedQuery,
 						desc: descriptionMessage
 					}
 				);
 			}else{
 				res.add(
 					{
-						id: queryRemovedUnavailableCharacters,
+						id: normalizedQuery,
 						payload: 'pending',
-						title: queryRemovedUnavailableCharacters,
+						title: normalizedQuery,
 						desc: "Please input file or folder path."
 					}
 				);
