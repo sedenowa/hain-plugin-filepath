@@ -210,6 +210,8 @@ module.exports = (pluginContext) => {
 			if(splittedQuery.length >= 2){
 				splittedQuery[1] = "\\\\" + splittedQuery[0] + "\\" + splittedQuery[1];
 				splittedQuery.shift();
+			}else if (splittedQuery.length == 1){
+				splittedQuery[0] = "\\\\" + splittedQuery[0];
 			}
 		}
 		
@@ -226,23 +228,23 @@ module.exports = (pluginContext) => {
 		);
 
 		if(sortedAvailableFullPathes.length == 0){
-			if(queryRemovedUnavailableCharacters.length > 0){
+			if(normalizedQuery.length > 0){
 				var descriptionMessage = "Not File/Folder. Cannot open.";
 				//add to res.
 				res.add(
 					{
-						id: queryRemovedUnavailableCharacters,
+						id: normalizedQuery,
 						payload: 'open',
-						title: queryRemovedUnavailableCharacters,
+						title: normalizedQuery,
 						desc: descriptionMessage
 					}
 				);
 			}else{
 				res.add(
 					{
-						id: queryRemovedUnavailableCharacters,
+						id: normalizedQuery,
 						payload: 'pending',
-						title: queryRemovedUnavailableCharacters,
+						title: normalizedQuery,
 						desc: "Please input file or folder path."
 					}
 				);
