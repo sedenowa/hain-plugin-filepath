@@ -12,6 +12,9 @@ module.exports = (pluginContext) => {
 	
 	const commandHeader = "/fp ";
 	
+	var availableDrives = [];
+	//init drive
+	
 	//check if the file or folder exists
 	//return 1:File 2:Folder -1,0:Invalid path
 	function checkFileOrFolder(path) {
@@ -204,6 +207,38 @@ module.exports = (pluginContext) => {
 		return normalizedQuery;
 	}
 	
+	//search drives.
+	function searchAvailableDrives(){
+		var innerAvailableDrives = [];
+		const ASCIICodeOfA = 65 , ASCIICodeOfZ = 90;
+		const ASCIICodeOfD = 65 + 3;
+		//for (var ASCIICode = 65; ASCIICode <= ASCIICodeOfZ ; ASCIICode++){
+		for (var ASCIICode = 65; ASCIICode <= ASCIICodeOfD ; ASCIICode++){
+			var checkingDrive = String.fromCharCode(ASCIICode) + ":";
+			switch(checkFileOrFolder(checkingDrive)){
+				case -1://invalid
+				case 0://invalid
+				case 1://file
+					break;
+				case 2://folder
+					innerAvailableDrives.push(String.fromCharCode(ASCIICode) + ":" + "\\");
+					break;
+				default:
+					break;
+			}
+		}
+		return innerAvailableDrives;
+	}
+	
+	function refreshAvailableDrives(){
+		availableDrives = searchAvailableDrives();
+	}
+	
+	function startup(){
+		//Search Available Drives.
+		availableDrives = searchAvailableDrives();
+	}
+	
 	function search (query, res) {
 		//format query.
 		var normalizedQuery = formatQuery(query);
@@ -323,22 +358,8 @@ module.exports = (pluginContext) => {
 		//find candidates
 		//when there is no input
 		if(normalizedQuery.length == 0){
-			//search drive.
-			const ASCIICodeOfA = 65 , ASCIICodeOfZ = 90;
-			for (var ASCIICode = 65; ASCIICode <= ASCIICodeOfZ ; ASCIICode++){
-				var checkingDrive = String.fromCharCode(ASCIICode) + ":";
-				switch(checkFileOrFolder(checkingDrive)){
-					case -1://invalid
-					case 0://invalid
-					case 1://file
-						break;
-					case 2://folder
-						foundCandidates.push(String.fromCharCode(ASCIICode) + ":" + "\\");
-						break;
-					default:
-						break;
-				}
-			}
+			//set available drives.
+			foundCandidates = availableDrives.slice();
 		}else{
 			//check the current path is valid
 			if(true){
@@ -362,6 +383,17 @@ module.exports = (pluginContext) => {
 				);
 			}
 		}
+		
+		//refresh command to the end of list
+		res.add(
+			{
+				//id: checkingDrive,
+				id: "",
+				payload: 'refresh',
+				title: "Refresh",
+				desc: "Search Available Drives Again."
+			}
+		);
 	}
 
 	function execute (id, payload) {
@@ -375,11 +407,14 @@ module.exports = (pluginContext) => {
 				//complement path (set id to query)
 				app.setQuery(id);
 				break;
+			case 'refresh':
+				refreshAvailableDrives();
+				break;
 			case 'pending':
 			default:
 				return;
 		}
 	}
 
-	return { search, execute };
+	return { startup, search, execute };
 }
