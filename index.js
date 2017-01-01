@@ -176,13 +176,16 @@ module.exports = (pluginContext) => {
 			}
 		}
 	}
-
-	function search (query, res) {
-		//format query.
+	
+	//format query as below.
+	//remove spaces attached on head and bottom.
+	//remove spaces attached on head and bottom.
+	//normalize
+	function formatQuery(query){
 		//remove spaces attached on head and bottom.
 		var trimmedQuery = query.trim();
 
-		//remove unavailable characters ( * / ? " < > | ).
+		//remove unavailable characters.
 		var queryRemovedUnavailableCharacters = 
 			removeCharacters(trimmedQuery,['*','/','?',"\"","<",">","|","\t"]);
 
@@ -192,16 +195,24 @@ module.exports = (pluginContext) => {
 			normalizedQuery = "";
 		}
 		
+		//return result
+		return normalizedQuery;
+	}
+	
+	function search (query, res) {
+		//format query.
+		var normalizedQuery = formatQuery(query);
+
 		//check if the path is file server.
+		//if the path is file server, remove "\\" attached on head.
 		var isFileServer = false;
 		if(normalizedQuery.indexOf("\\\\") == 0){
 			isFileServer = true;
 			normalizedQuery.substring(("\\\\").length);
 		}
-
+		
 		//split by separator('\' or '/').
 		var splittedQuery = normalizedQuery.split(path.sep);
-		
 		//remove empty element in splittedQuery.
 		var splittedQuery = splittedQuery.filter(function(e){return e !== "";});
 		
@@ -223,11 +234,14 @@ module.exports = (pluginContext) => {
 		var sortedAvailableFullPathes = availableFullPathes.slice();
 		sortedAvailableFullPathes.sort(
 			function(a,b){
+				//compare the distance
 				return ( (a[1] - b[1]) );
 			}
 		);
 
+		//add to result (when no available path is found)
 		if(sortedAvailableFullPathes.length == 0){
+			//when there is no input.
 			if(normalizedQuery.length > 0){
 				var descriptionMessage = "Not File/Folder. Cannot open.";
 				//add to res.
@@ -236,9 +250,12 @@ module.exports = (pluginContext) => {
 						id: normalizedQuery,
 						payload: 'open',
 						title: normalizedQuery,
+						//+ "<b>" + "aaa" + "</b>",
 						desc: descriptionMessage
+						//,redirect: '/fp ' + 'C:\\'
 					}
 				);
+			//when there is input.
 			}else{
 				res.add(
 					{
@@ -249,7 +266,7 @@ module.exports = (pluginContext) => {
 					}
 				);
 			}
-		}else{
+		}else{//add to result (when no available path is found)
 			for(var index = 0 , len = sortedAvailableFullPathes.length ; index < len ; index++){
 				//Check state of formatted path (File or Folder or not).
 				//and set Description Message according to the state.
