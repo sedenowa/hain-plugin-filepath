@@ -12,8 +12,24 @@ module.exports = (pluginContext) => {
 	
 	const commandHeader = "/fp";
 	
-	var availableDrives = [];
-	//init drive
+	function initAvailableDrives(){
+		var innnerAvailableDrives = [];
+		const ASCIICodeOfA = 65 , ASCIICodeOfZ = 90;
+		for (var ASCIICode = ASCIICodeOfA; ASCIICode <= ASCIICodeOfZ ; ASCIICode++){
+			var checkingDrive = String.fromCharCode(ASCIICode) + ":";
+			innnerAvailableDrives.push(
+				{
+					driveName:checkingDrive + "\\",
+					isAvailable:false,
+					failureOfAccess:0
+				}
+			);
+		}
+		return innnerAvailableDrives;
+	}
+	var availableDrives = initAvailableDrives();
+	//init availableDrives
+	const failureThreshold = 10;
 	
 	//check if the file or folder exists
 	//return 1:File 2:Folder -1,0:Invalid path
@@ -199,43 +215,32 @@ module.exports = (pluginContext) => {
 		return normalizedQuery;
 	}
 	
-	//search drives.
-	/*
-	function searchAvailableDrives(){
-		var innerAvailableDrives = [];
-		const ASCIICodeOfA = 65 , ASCIICodeOfZ = 90;
-		const ASCIICodeOfD = 65 + 3;
-		//for (var ASCIICode = 65; ASCIICode <= ASCIICodeOfZ ; ASCIICode++){
-		for (var ASCIICode = 65; ASCIICode <= ASCIICodeOfD ; ASCIICode++){
-			var checkingDrive = String.fromCharCode(ASCIICode) + ":";
-			switch(checkFileOrFolder(checkingDrive)){
-				case -1://invalid
-				case 0://invalid
-				case 1://file
-					break;
-				case 2://folder
-					innerAvailableDrives.push(String.fromCharCode(ASCIICode) + ":" + "\\");
-					break;
-				default:
-					break;
-			}
-		}
-		return innerAvailableDrives;
-	}
-	*/
-	
+	//search available drives.
 	function searchAvailableDrivesAsync(){
-		const ASCIICodeOfA = 65 , ASCIICodeOfZ = 90;
-		const ASCIICodeOfD = 65 + 3;
-		for (var ASCIICode = ASCIICodeOfA; ASCIICode <= ASCIICodeOfZ ; ASCIICode++){
-			//for async process, use 'let'
-			let checkingDrive = String.fromCharCode(ASCIICode) + ":";
-			fs.stat(checkingDrive,function(err,stats){
+		//{
+		//	driveName:checkingDrive + "\\",
+		//	isAvailable:false,
+		//	failureOfAccess:0
+		//}
+		for (var index = 0, len = availableDrives.length ; index < len ; index++){
+			let checkingDriveObj = availableDrives[index];
+			fs.stat(checkingDriveObj.driveName, function(err,stats){
 				if(err){
+					if(checkingDriveObj.isAvailable == true){
+						checkingDriveObj.failureOfAccess++;
+						if(checkingDriveObj.failureOfAccess > failureThreshold){
+							checkingDriveObj.isAvailable = false;
+							checkingDriveObj.failureOfAccess = 0;
+						}
+					}
 					return;
 				}else{
 					if(stats.isDirectory() == true){
-						availableDrives.push(checkingDrive.slice() + "\\");
+						if(checkingDriveObj.isAvailable == true){
+							checkingDriveObj.failureOfAccess = 0;
+						}else{
+							checkingDriveObj.isAvailable = true;
+						}
 					}
 				}
 			});
@@ -364,7 +369,11 @@ module.exports = (pluginContext) => {
 		if(currentDirectory == "" || checkFileOrFolder(currentDirectory) == 2){
 			//find candidates
 			if(currentDirectory == ""){
-				foundCandidates = availableDrives.slice();
+				for (var index = 0, len = availableDrives.length ; index < len ; index++){
+					if(availableDrives[index].isAvailable == true){
+						foundCandidates.push(availableDrives[index].driveName);
+					}
+				}
 			}else{// when checkFileOrFolder(currentDirectory) == 2
 				//(todo) search File/Folder
 			}
