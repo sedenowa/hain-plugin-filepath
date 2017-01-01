@@ -104,7 +104,7 @@ module.exports = (pluginContext) => {
 				alreadyCheckedPathes.push(checkingPath);
 				switch(checkFileOrFolder(checkingPath)){
 					case -1:
-					case 3:
+					case 0:
 						//do nothing
 						break;
 					case 1://Available File
@@ -180,7 +180,6 @@ module.exports = (pluginContext) => {
 	
 	//format query as below.
 	//remove spaces attached on head and bottom.
-	//remove spaces attached on head and bottom.
 	//normalize
 	function formatQuery(query){
 		//remove spaces attached on head and bottom.
@@ -201,6 +200,7 @@ module.exports = (pluginContext) => {
 	}
 	
 	//search drives.
+	/*
 	function searchAvailableDrives(){
 		var innerAvailableDrives = [];
 		const ASCIICodeOfA = 65 , ASCIICodeOfZ = 90;
@@ -222,14 +222,33 @@ module.exports = (pluginContext) => {
 		}
 		return innerAvailableDrives;
 	}
+	*/
+	
+	function searchAvailableDrivesAsync(){
+		const ASCIICodeOfA = 65 , ASCIICodeOfZ = 90;
+		const ASCIICodeOfD = 65 + 3;
+		for (var ASCIICode = ASCIICodeOfA; ASCIICode <= ASCIICodeOfZ ; ASCIICode++){
+			//for async process, use 'let'
+			let checkingDrive = String.fromCharCode(ASCIICode) + ":";
+			fs.stat(checkingDrive,function(err,stats){
+				if(err){
+					return;
+				}else{
+					if(stats.isDirectory() == true){
+						availableDrives.push(checkingDrive.slice() + "\\");
+					}
+				}
+			});
+		}
+	}
 	
 	function refreshAvailableDrives(){
-		availableDrives = searchAvailableDrives();
+		searchAvailableDrivesAsync();
 	}
 	
 	function startup(){
 		//Search Available Drives.
-		availableDrives = searchAvailableDrives();
+		searchAvailableDrivesAsync();
 	}
 	
 	function search (query, res) {
@@ -274,32 +293,7 @@ module.exports = (pluginContext) => {
 
 		//add to result (when no available path is found)
 		if(sortedAvailableFullPathes.length == 0){
-			//when there is no input.
-			if(normalizedQuery.length == 0){
-				var descriptionMessage = "Please input file or folder path.";
-				res.add(
-					{
-						id: normalizedQuery,
-						payload: 'pending',
-						title: normalizedQuery,
-						desc: descriptionMessage
-					}
-				);
-			//when there is some input.
-			}else{
-				var descriptionMessage = "Not File/Folder. Cannot open.";
-				//add to res.
-				res.add(
-					{
-						id: normalizedQuery,
-						payload: 'open',
-						title: normalizedQuery,
-						//+ "<b>" + "aaa" + "</b>",
-						desc: descriptionMessage
-						//,redirect: '/fp ' + 'C:\\'
-					}
-				);
-			}
+			//do nothing
 		}else{//add to result (when no available path is found)
 			for(var index = 0 , len = sortedAvailableFullPathes.length ; index < len ; index++){
 				//Check state of formatted path (File or Folder or not).
@@ -348,34 +342,54 @@ module.exports = (pluginContext) => {
 		
 		//search available path to complement
 		var foundCandidates = [];
-		//find candidates
-		//when there is no input
-		if(normalizedQuery.length == 0){
-			//set available drives.
-			foundCandidates = availableDrives.slice();
-		}else{
-			//check the current path is valid
-			if(true){
-				//search File/Folder
+		//check if the current path is empty
+		var searchingSplittedQueryBase = splittedQuery.slice();
+		var lengthOfsearchingSplittedQueryBase = searchingSplittedQueryBase.length
+		var currentDirectory;
+		var searchKeyword;
+		if(lengthOfsearchingSplittedQueryBase == 0){
+			currentDirectory = "";
+			searchKeyword = "";
+		}else if(lengthOfsearchingSplittedQueryBase == 1){
+			currentDirectory = "";
+			searchKeyword = searchingSplittedQueryBase[0];
+		}else{// length >= 2
+			for(index = 0 ; index < lengthOfsearchingSplittedQueryBase - 1 ; index++){
+				currentDirectory = currentDirectory + searchingSplittedQueryBase[index] + "\\";
 			}
+			currentDirectory.pop();
+			searchKeyword = searchingSplittedQueryBase[lengthOfsearchingSplittedQueryBase - 1];
 		}
-		for(var index = 0, len = foundCandidates.length ; index < len ; index++){
-			//check if candidates 
-			if(true){
-				//add to res.
-				var descriptionMessage = "Set this path : \"" + foundCandidates[index] + "\"";
-				res.add(
-					{
-						//id: checkingDrive,
-						id: commandHeader + " " + foundCandidates[index],
-						payload: 'complement',
-						title: foundCandidates[index],
-						desc: descriptionMessage,
-						redirect: commandHeader + " " + foundCandidates[index]
-					}
-				);
+		//check the existence of currentDirectory.
+		if(currentDirectory == "" || checkFileOrFolder(currentDirectory) == 2){
+			//find candidates
+			if(currentDirectory == ""){
+				foundCandidates = availableDrives.slice();
+			}else{// when checkFileOrFolder(currentDirectory) == 2
+				//(todo) search File/Folder
 			}
+			//filter with searchKeyword
+			for(var index = 0, len = foundCandidates.length ; index < len ; index++){
+				//check if candidates contains searchKeyword on head
+				if(foundCandidates[index].indexOf(searchKeyword) == 0){
+					//add to res.
+					var descriptionMessage = "Set this path : \"" + foundCandidates[index] + "\"";
+					//var redirect;
+					res.add(
+						{
+							//id: checkingDrive,
+							id: commandHeader + " " + foundCandidates[index],
+							payload: 'complement',
+							title: "<b>" + foundCandidates[index].substring(0,searchKeyword.length) + "</b>" + foundCandidates[index].substring(searchKeyword.length),
+							desc: descriptionMessage,
+							redirect:commandHeader + " " + foundCandidates[index]
+						}
+					);
+				}
+			}
+
 		}
+		
 		
 		//refresh command to the end of list
 		res.add(
