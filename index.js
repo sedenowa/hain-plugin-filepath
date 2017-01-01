@@ -1,11 +1,16 @@
 'use strict'
 
 module.exports = (pluginContext) => {
+	//to access context of app
+	const app = pluginContext.app;
+	//to open File/Folder
 	const shell = pluginContext.shell;
-	const clipboard = pluginContext.clipboard;
 	//to access filesystem
 	const fs = require('fs');
+	//to format filepath
 	const path = require('path');
+	
+	const commandHeader = "/fp ";
 	
 	//check if the file or folder exists
 	//return 1:File 2:Folder -1,0:Invalid path
@@ -327,16 +332,17 @@ module.exports = (pluginContext) => {
 					case 1://file
 						break;
 					case 2://folder
-						var descriptionMessage = "Open this Folder : \"" + checkingDrive;
+						var descriptionMessage = "Set this drive : \"" + checkingDrive;
 						drives.push(String.fromCharCode(ASCIICode) + ":");
 						//add to res.
 						res.add(
 							{
-								id: checkingDrive,
-								payload: 'open',
+								//id: checkingDrive,
+								id: commandHeader + checkingDrive + "\\",
+								payload: 'complement',
 								title: checkingDrive,
 								desc: descriptionMessage,
-								redirect: '/fp ' + checkingDrive + "\\"
+								redirect: commandHeader + checkingDrive + "\\"
 							}
 						);
 						break;
@@ -351,10 +357,19 @@ module.exports = (pluginContext) => {
 
 	function execute (id, payload) {
 		//open file or folder.
-		if (payload !== 'open') {
-			return
+		switch (payload){
+			case 'open':
+				//open file/folder
+				shell.openItem(`${id}`);
+				break;
+			case 'complement':
+				//complement path (set id to query)
+				app.setQuery(id);
+				break;
+			case 'pending':
+			default:
+				return;
 		}
-		shell.openItem(`${id}`);
 	}
 
 	return { search, execute };
