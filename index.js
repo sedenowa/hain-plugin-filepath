@@ -408,6 +408,7 @@ module.exports = (pluginContext) => {
 				app.setQuery(id);
 				break;
 			case 'refresh':
+				//search available drives again.
 				refreshAvailableDrives();
 				break;
 			case 'pending':
