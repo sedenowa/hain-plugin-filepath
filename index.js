@@ -10,7 +10,7 @@ module.exports = (pluginContext) => {
 	//to format filepath
 	const path = require('path');
 	
-	const commandHeader = "/fp ";
+	const commandHeader = "/fp";
 	
 	var availableDrives = [];
 	//init drive
@@ -268,7 +268,7 @@ module.exports = (pluginContext) => {
 		
 		//search available file/folder name. (considering unnecessary space)
 		var availableFullPathes = [];
-		searchAvailablePathConsideringUnnecessarySpace(availableFullPathes,"",splittedQuery);
+		searchAvailablePathConsideringUnnecessarySpace(availableFullPathes,"",splittedQuery.slice());
 		
 		//sort available path candidates by distance between them and query.
 		var sortedAvailableFullPathes = availableFullPathes.slice();
@@ -374,11 +374,11 @@ module.exports = (pluginContext) => {
 				res.add(
 					{
 						//id: checkingDrive,
-						id: commandHeader + foundCandidates[index],
+						id: commandHeader + " " + foundCandidates[index],
 						payload: 'complement',
 						title: foundCandidates[index],
 						desc: descriptionMessage,
-						redirect: commandHeader + foundCandidates[index]
+						redirect: commandHeader + " " + foundCandidates[index]
 					}
 				);
 			}
@@ -387,8 +387,7 @@ module.exports = (pluginContext) => {
 		//refresh command to the end of list
 		res.add(
 			{
-				//id: checkingDrive,
-				id: "",
+				id: commandHeader + query,
 				payload: 'refresh',
 				title: "Refresh",
 				desc: "Search Available Drives Again."
@@ -410,6 +409,7 @@ module.exports = (pluginContext) => {
 			case 'refresh':
 				//search available drives again.
 				refreshAvailableDrives();
+				app.setQuery(id);
 				break;
 			case 'pending':
 			default:
