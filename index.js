@@ -319,10 +319,11 @@ module.exports = (pluginContext) => {
 		}
 		
 		//search available path to complement
+		var foundCandidates = [];
+		//find candidates
 		//when there is no input
 		if(normalizedQuery.length == 0){
 			//search drive.
-			var drives = [];
 			const ASCIICodeOfA = 65 , ASCIICodeOfZ = 90;
 			for (var ASCIICode = 65; ASCIICode <= ASCIICodeOfZ ; ASCIICode++){
 				var checkingDrive = String.fromCharCode(ASCIICode) + ":";
@@ -332,26 +333,34 @@ module.exports = (pluginContext) => {
 					case 1://file
 						break;
 					case 2://folder
-						var descriptionMessage = "Set this drive : \"" + checkingDrive;
-						drives.push(String.fromCharCode(ASCIICode) + ":");
-						//add to res.
-						res.add(
-							{
-								//id: checkingDrive,
-								id: commandHeader + checkingDrive + "\\",
-								payload: 'complement',
-								title: checkingDrive,
-								desc: descriptionMessage,
-								redirect: commandHeader + checkingDrive + "\\"
-							}
-						);
+						foundCandidates.push(String.fromCharCode(ASCIICode) + ":" + "\\");
 						break;
 					default:
 						break;
 				}
 			}
 		}else{
-			
+			//check the current path is valid
+			if(true){
+				//search File/Folder
+			}
+		}
+		for(var index = 0, len = foundCandidates.length ; index < len ; index++){
+			//check if candidates 
+			if(true){
+				//add to res.
+				var descriptionMessage = "Set this path : \"" + foundCandidates[index] + "\"";
+				res.add(
+					{
+						//id: checkingDrive,
+						id: commandHeader + foundCandidates[index],
+						payload: 'complement',
+						title: foundCandidates[index],
+						desc: descriptionMessage,
+						redirect: commandHeader + foundCandidates[index]
+					}
+				);
+			}
 		}
 	}
 
