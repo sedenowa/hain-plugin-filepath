@@ -60,13 +60,6 @@ module.exports = (pluginContext) => {
 		return copyOfTargetString;
 	}
 	
-	//search available path (considering unnecessary space)
-	function searchAvailablePathConsideringUnnecessarySpace(
-		availableFullPathes, availableCurrentPath , splittedRemainingPath
-	){
-		
-	}
-	
 	//check the position of space(' ' or '　').
 	//return array of positions.
 	function checkPositionOfSpaces(targetString){
