@@ -242,7 +242,18 @@ module.exports = (pluginContext) => {
 		//add to result (when no available path is found)
 		if(sortedAvailableFullPathes.length == 0){
 			//when there is no input.
-			if(normalizedQuery.length > 0){
+			if(normalizedQuery.length == 0){
+				var descriptionMessage = "Please input file or folder path.";
+				res.add(
+					{
+						id: normalizedQuery,
+						payload: 'pending',
+						title: normalizedQuery,
+						desc: descriptionMessage
+					}
+				);
+			//when there is some input.
+			}else{
 				var descriptionMessage = "Not File/Folder. Cannot open.";
 				//add to res.
 				res.add(
@@ -255,16 +266,6 @@ module.exports = (pluginContext) => {
 						//,redirect: '/fp ' + 'C:\\'
 					}
 				);
-			//when there is input.
-			}else{
-				res.add(
-					{
-						id: normalizedQuery,
-						payload: 'pending',
-						title: normalizedQuery,
-						desc: "Please input file or folder path."
-					}
-				);
 			}
 		}else{//add to result (when no available path is found)
 			for(var index = 0 , len = sortedAvailableFullPathes.length ; index < len ; index++){
@@ -273,10 +274,11 @@ module.exports = (pluginContext) => {
 				var descriptionMessage = "";
 				var availableFullPath = sortedAvailableFullPathes[index][0].slice();
 				var distance = sortedAvailableFullPathes[index][1];
+				var addToResFlag = false;
 				switch(checkFileOrFolder(availableFullPath)){
 					case -1://invalid
-					case 3://invalid
-						descriptionMessage = "Not File/Folder. Cannot open."
+					case 0://invalid
+						//descriptionMessage = "Not File/Folder. Cannot open."
 						break;
 					case 1://file
 						//extract file name
@@ -284,6 +286,7 @@ module.exports = (pluginContext) => {
 						var filename = availableFullPath.slice().split("\\").pop();
 						descriptionMessage = "Open this File : \"" + filename + 
 							"\" ( Distance = " + distance + " )";
+						addToResFlag = true;
 						break;
 					case 2://folder
 						//extract folder name
@@ -291,18 +294,58 @@ module.exports = (pluginContext) => {
 						var foldername = availableFullPath.slice().split("\\").pop();	
 						descriptionMessage = "Open this Folder : \"" + foldername + 
 							"\" ( Distance = " + distance + " )";
+						addToResFlag = true;
+						break;
+					default:
 						break;
 				}
 				//add to res.
-				res.add(
-					{
-						id: availableFullPath,
-						payload: 'open',
-						title: availableFullPath,
-						desc: descriptionMessage
-					}
-				);
+				if(addToResFlag == true){
+					res.add(
+						{
+							id: availableFullPath,
+							payload: 'open',
+							title: availableFullPath,
+							desc: descriptionMessage
+						}
+					);
+				}
 			}
+		}
+		
+		//search available path to complement
+		//when there is no input
+		if(normalizedQuery.length == 0){
+			//search drive.
+			var drives = [];
+			const ASCIICodeOfA = 65 , ASCIICodeOfZ = 90;
+			for (var ASCIICode = 65; ASCIICode <= ASCIICodeOfZ ; ASCIICode++){
+				var checkingDrive = String.fromCharCode(ASCIICode) + ":";
+				switch(checkFileOrFolder(checkingDrive)){
+					case -1://invalid
+					case 0://invalid
+					case 1://file
+						break;
+					case 2://folder
+						var descriptionMessage = "Open this Folder : \"" + checkingDrive;
+						drives.push(String.fromCharCode(ASCIICode) + ":");
+						//add to res.
+						res.add(
+							{
+								id: checkingDrive,
+								payload: 'open',
+								title: checkingDrive,
+								desc: descriptionMessage,
+								redirect: '/fp ' + checkingDrive + "\\"
+							}
+						);
+						break;
+					default:
+						break;
+				}
+			}
+		}else{
+			
 		}
 	}
 
