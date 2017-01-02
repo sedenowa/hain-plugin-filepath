@@ -413,32 +413,43 @@ module.exports = (pluginContext) => {
 			//filter with searchKeyword and add to res
 			for(var index = 0, len = foundCandidates.length ; index < len ; index++){
 				//check if candidates contains searchKeyword on head
-				if(foundCandidates[index].path.indexOf(searchKeyword) == 0){
+				//if(foundCandidates[index].path.indexOf(searchKeyword) == 0){
+				if(foundCandidates[index].path.toLocaleLowerCase().indexOf(searchKeyword.toLocaleLowerCase()) == 0){
 					//add to res.
 					var descriptionMessage = 
 						"Set this path : \"" + foundCandidates[index].path + "\"";
 					//var redirect;
-					var innerTitle,innerRedirect;
+					var innerId,innerTitle,innerRedirect;
 					switch(foundCandidates[index].state){
 						case "drive":
 							innerTitle = "";
+							innerId = 
+								commandHeader + " " + 
+								currentDirectory + foundCandidates[index].path + "\\";
+							innerRedirect = innerId;
 							break;
 						case "file":
+							innerTitle = ".\\";
+							innerId = 
+								commandHeader + " " + 
+								currentDirectory + foundCandidates[index].path;
+							innerRedirect = innerId;
+							break;
 						case "folder":
 							innerTitle = ".\\";
+							innerId = 
+								commandHeader + " " + 
+								currentDirectory + foundCandidates[index].path + "\\";
+							innerRedirect = innerId;
 							break;
 					}
-					innerTitle = 
-						innerTitle + 
+					innerTitle = innerTitle + 
 						"<b>" + foundCandidates[index].path.substring(0,searchKeyword.length) + "</b>" + 
 						foundCandidates[index].path.substring(searchKeyword.length);
-					innerRedirect = 
-						commandHeader + " " + 
-						currentDirectory + foundCandidates[index].path + "\\";
 					res.add(
 						{
 							//id: checkingDrive,
-							id: commandHeader + " " + foundCandidates[index].path,
+							id: innerId,
 							payload: 'complement',
 							title: innerTitle,
 							desc: descriptionMessage,
