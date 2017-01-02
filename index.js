@@ -19,7 +19,7 @@ module.exports = (pluginContext) => {
 			var checkingDrive = String.fromCharCode(ASCIICode) + ":";
 			innnerAvailableDrives.push(
 				{
-					driveName:checkingDrive + "\\",
+					driveName:checkingDrive,
 					isAvailable:false,
 					failureOfAccess:0
 				}
@@ -206,7 +206,7 @@ module.exports = (pluginContext) => {
 			removeCharacters(trimmedQuery,['*','/','?',"\"","<",">","|","\t"]);
 
 		//normalize
-		var normalizedQuery = queryRemovedUnavailableCharacters;
+		var normalizedQuery = path.normalize(queryRemovedUnavailableCharacters);
 		if(normalizedQuery == "."){
 			normalizedQuery = "";
 		}
@@ -270,8 +270,6 @@ module.exports = (pluginContext) => {
 		
 		//split by separator('\' or '/').
 		var splittedQuery = normalizedQuery.split(path.sep);
-		//remove empty element in splittedQuery.
-		var splittedQuery = splittedQuery.filter(function(e){return e !== "";});
 		
 		//if isFileServer is true, combine 1st and 2nd element.
 		if(isFileServer == true){
@@ -282,10 +280,12 @@ module.exports = (pluginContext) => {
 				splittedQuery[0] = "\\\\" + splittedQuery[0];
 			}
 		}
+		//remove empty element in splittedQuery.
+		var splittedQueryRemovedUnnecessaryElement = splittedQuery.filter(function(e){return e !== "";});
 		
 		//search available file/folder name. (considering unnecessary space)
 		var availableFullPathes = [];
-		searchAvailablePathConsideringUnnecessarySpace(availableFullPathes,"",splittedQuery.slice());
+		searchAvailablePathConsideringUnnecessarySpace(availableFullPathes,"",splittedQueryRemovedUnnecessaryElement.slice());
 		
 		//sort available path candidates by distance between them and query.
 		var sortedAvailableFullPathes = availableFullPathes.slice();
@@ -359,12 +359,14 @@ module.exports = (pluginContext) => {
 			currentDirectory = "";
 			searchKeyword = searchingSplittedQueryBase[0];
 		}else{// length >= 2
+			currentDirectory = "";
 			for(index = 0 ; index < lengthOfsearchingSplittedQueryBase - 1 ; index++){
 				currentDirectory = currentDirectory + searchingSplittedQueryBase[index] + "\\";
 			}
-			currentDirectory.pop();
+			//currentDirectory.pop();
 			searchKeyword = searchingSplittedQueryBase[lengthOfsearchingSplittedQueryBase - 1];
 		}
+		
 		//check the existence of currentDirectory.
 		if(currentDirectory == "" || checkFileOrFolder(currentDirectory) == 2){
 			//find candidates
@@ -375,8 +377,10 @@ module.exports = (pluginContext) => {
 					}
 				}
 			}else{// when checkFileOrFolder(currentDirectory) == 2
-				//(todo) search File/Folder
+				//(todo) make async (use fs.readdir)
+				foundCandidates = fs.readdirSync(currentDirectory);
 			}
+			
 			//filter with searchKeyword
 			for(var index = 0, len = foundCandidates.length ; index < len ; index++){
 				//check if candidates contains searchKeyword on head
@@ -389,9 +393,9 @@ module.exports = (pluginContext) => {
 							//id: checkingDrive,
 							id: commandHeader + " " + foundCandidates[index],
 							payload: 'complement',
-							title: "<b>" + foundCandidates[index].substring(0,searchKeyword.length) + "</b>" + foundCandidates[index].substring(searchKeyword.length),
+							title: ".\\" + "<b>" + foundCandidates[index].substring(0,searchKeyword.length) + "</b>" + foundCandidates[index].substring(searchKeyword.length),
 							desc: descriptionMessage,
-							redirect:commandHeader + " " + foundCandidates[index]
+							redirect:commandHeader + " " + currentDirectory + foundCandidates[index] + "\\"
 						}
 					);
 				}
