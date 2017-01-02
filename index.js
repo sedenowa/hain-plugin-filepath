@@ -413,7 +413,7 @@ module.exports = (pluginContext) => {
 			//filter with searchKeyword and add to res
 			for(var index = 0, len = foundCandidates.length ; index < len ; index++){
 				//check if candidates contains searchKeyword on head
-				//if(foundCandidates[index].path.indexOf(searchKeyword) == 0){
+				//if(foundCandidates[index].path.toLocaleLowerCase().indexOf(searchKeyword.toLocaleLowerCase()) == 0 && foundCandidates[index].path != searchKeyword){
 				if(foundCandidates[index].path.toLocaleLowerCase().indexOf(searchKeyword.toLocaleLowerCase()) == 0){
 					//add to res.
 					var descriptionMessage = 
