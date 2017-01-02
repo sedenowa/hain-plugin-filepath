@@ -373,36 +373,81 @@ module.exports = (pluginContext) => {
 			if(currentDirectory == ""){
 				for (var index = 0, len = availableDrives.length ; index < len ; index++){
 					if(availableDrives[index].isAvailable == true){
-						foundCandidates.push(availableDrives[index].driveName);
+						foundCandidates.push(
+							{
+								path:availableDrives[index].driveName,
+								state:"drive"
+							}
+						);
 					}
 				}
 			}else{// when checkFileOrFolder(currentDirectory) == 2
 				//(todo) make async (use fs.readdir)
-				foundCandidates = fs.readdirSync(currentDirectory);
+				var foundList = fs.readdirSync(currentDirectory);
+				//foundCandidates = fs.readdirSync(currentDirectory);
+				for(var index = 0, len = foundList.length ; index < len ; index++){
+					switch(checkFileOrFolder(currentDirectory + foundList[index])){
+						case 1://file
+							foundCandidates.push(
+								{
+									path:foundList[index],
+									state:"file"
+								}
+							);
+							break;
+						case 2://folder
+							foundCandidates.push(
+								{
+									path:foundList[index],
+									state:"folder"
+								}
+							);
+							break;
+						default:
+							//do nothing
+							break;
+					}
+				}
 			}
 			
-			//filter with searchKeyword
+			//filter with searchKeyword and add to res
 			for(var index = 0, len = foundCandidates.length ; index < len ; index++){
 				//check if candidates contains searchKeyword on head
-				if(foundCandidates[index].indexOf(searchKeyword) == 0){
+				if(foundCandidates[index].path.indexOf(searchKeyword) == 0){
 					//add to res.
-					var descriptionMessage = "Set this path : \"" + foundCandidates[index] + "\"";
+					var descriptionMessage = 
+						"Set this path : \"" + foundCandidates[index].path + "\"";
 					//var redirect;
+					var innerTitle,innerRedirect;
+					switch(foundCandidates[index].state){
+						case "drive":
+							innerTitle = "";
+							break;
+						case "file":
+						case "folder":
+							innerTitle = ".\\";
+							break;
+					}
+					innerTitle = 
+						innerTitle + 
+						"<b>" + foundCandidates[index].path.substring(0,searchKeyword.length) + "</b>" + 
+						foundCandidates[index].path.substring(searchKeyword.length);
+					innerRedirect = 
+						commandHeader + " " + 
+						currentDirectory + foundCandidates[index].path + "\\";
 					res.add(
 						{
 							//id: checkingDrive,
-							id: commandHeader + " " + foundCandidates[index],
+							id: commandHeader + " " + foundCandidates[index].path,
 							payload: 'complement',
-							title: ".\\" + "<b>" + foundCandidates[index].substring(0,searchKeyword.length) + "</b>" + foundCandidates[index].substring(searchKeyword.length),
+							title: innerTitle,
 							desc: descriptionMessage,
-							redirect:commandHeader + " " + currentDirectory + foundCandidates[index] + "\\"
+							redirect:innerRedirect
 						}
 					);
 				}
 			}
-
 		}
-		
 		
 		//refresh command to the end of list
 		res.add(
