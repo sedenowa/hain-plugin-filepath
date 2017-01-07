@@ -68,8 +68,10 @@ module.exports = (pluginContext) => {
 				var descriptionMessage = "";
 				var availableFullPath = sortedAvailableFullPathes[index][0].slice();
 				var distance = sortedAvailableFullPathes[index][1];
+				var status = sortedAvailableFullPathes[index][2];
 				var addToResFlag = false;
-				switch(checkFileOrFolder(availableFullPath)){
+				//switch(checkFileOrFolder(availableFullPath)){
+				switch(status){
 					case -1://invalid
 					case 0://invalid
 						//descriptionMessage = "Not File/Folder. Cannot open."

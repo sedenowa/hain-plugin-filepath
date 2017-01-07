@@ -90,10 +90,11 @@ function searchAvailablePathConsideringUnnecessarySpaceWithDistance(
 			//exit
 			return;
 		}else{
+			var status = checkFileOrFolder(availableCurrentPath);
 			//check if availableCurrentPath is already added to availableFullPathes
-			if(availableFullPathes.indexOf([availableCurrentPath , currentDistance]) == -1){
+			if(availableFullPathes.indexOf([availableCurrentPath , currentDistance , status]) == -1){
 				//add availableCurrentPath to availableFullPathes
-				availableFullPathes.push([availableCurrentPath , currentDistance]);
+				availableFullPathes.push([availableCurrentPath , currentDistance , status]);
 			}
 		}
 	}else{
