@@ -10,30 +10,12 @@ module.exports = (pluginContext) => {
 	//to format filepath
 	const path = require('path');
 	
-	//Util
+	//Utils
 	var searchPathUtil = require("./util/searchPathUtil");
 	var formatStringUtil = require("./util/formatStringUtil");
+	var searchDriveUtil = require("./util/searchDriveUtil");
 	
 	const commandHeader = "/fp";
-	
-	function initAvailableDrives(){
-		var innnerAvailableDrives = [];
-		const ASCIICodeOfA = 65 , ASCIICodeOfZ = 90;
-		for (var ASCIICode = ASCIICodeOfA; ASCIICode <= ASCIICodeOfZ ; ASCIICode++){
-			var checkingDrive = String.fromCharCode(ASCIICode) + ":";
-			innnerAvailableDrives.push(
-				{
-					driveName:checkingDrive,
-					isAvailable:false,
-					failureOfAccess:0
-				}
-			);
-		}
-		return innnerAvailableDrives;
-	}
-	var availableDrives = initAvailableDrives();
-	//init availableDrives
-	const failureThreshold = 10;
 	
 	//check if the file or folder exists
 	//return 1:File 2:Folder -1,0:Invalid path
@@ -54,42 +36,6 @@ module.exports = (pluginContext) => {
 		}
 	}
 
-	//search available drives.
-	function searchAvailableDrivesAsync(){
-		//{
-		//	driveName:checkingDrive + "\\",
-		//	isAvailable:false,
-		//	failureOfAccess:0
-		//}
-		for (var index = 0, len = availableDrives.length ; index < len ; index++){
-			let checkingDriveObj = availableDrives[index];
-			fs.stat(checkingDriveObj.driveName, function(err,stats){
-				if(err){
-					if(checkingDriveObj.isAvailable == true){
-						checkingDriveObj.failureOfAccess++;
-						if(checkingDriveObj.failureOfAccess > failureThreshold){
-							checkingDriveObj.isAvailable = false;
-							checkingDriveObj.failureOfAccess = 0;
-						}
-					}
-					return;
-				}else{
-					if(stats.isDirectory() == true){
-						if(checkingDriveObj.isAvailable == true){
-							checkingDriveObj.failureOfAccess = 0;
-						}else{
-							checkingDriveObj.isAvailable = true;
-						}
-					}
-				}
-			});
-		}
-	}
-	
-	function refreshAvailableDrives(){
-		searchAvailableDrivesAsync();
-	}
-	
 	function checkFileServer(query){
 		//check if the path is file server.
 		//if the path is file server, remove "\\" attached on head.
@@ -104,14 +50,13 @@ module.exports = (pluginContext) => {
 	
 	function startup(){
 		//Search Available Drives.
-		searchAvailableDrivesAsync();
+		searchDriveUtil.searchAvailableDrivesAsync();
 	}
 	
 	function search (query, res) {
 		//
 		var sortedAvailableFullPathes = 
 			searchPathUtil.searchAvailablePath(formatStringUtil.formatString(query));
-
 		
 		//format query.
 		var normalizedQuery = formatStringUtil.formatString(query);
@@ -211,6 +156,7 @@ module.exports = (pluginContext) => {
 		if(currentDirectory == "" || checkFileOrFolder(currentDirectory) == 2){
 			//find candidates
 			if(currentDirectory == ""){
+				var availableDrives = searchDriveUtil.getAvailableDrives();
 				for (var index = 0, len = availableDrives.length ; index < len ; index++){
 					if(availableDrives[index].isAvailable == true){
 						foundCandidates.push(
@@ -324,7 +270,7 @@ module.exports = (pluginContext) => {
 				break;
 			case 'refresh':
 				//search available drives again.
-				refreshAvailableDrives();
+				searchDriveUtil.searchAvailableDrivesAsync();
 				app.setQuery(id);
 				break;
 			case 'pending':
