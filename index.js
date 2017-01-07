@@ -61,8 +61,7 @@ module.exports = (pluginContext) => {
 		//add to result (when no available path is found)
 		if(sortedAvailableFullPathes.length == 0){
 			//do nothing
-		}else{
-			//add to result (when no available path is found, do nothing)
+		}else{//add to result (when no available path is found)
 			for(var index = 0 , len = sortedAvailableFullPathes.length ; index < len ; index++){
 				//Check state of formatted path (File or Folder or not).
 				//and set Description Message according to the state.

@@ -8,4 +8,3 @@ exports.removeCharacterWithPosition = function(string, index){
 		latterHalf.slice(index+1);
 	return stringRemovedChar;
 }
-

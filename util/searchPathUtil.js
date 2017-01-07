@@ -4,7 +4,25 @@ const fs = require('fs');
 const path = require('path');
 
 var commonUtil = require("./commonUtil");
-var commonSearchUtil = require("./commonSearchUtil");
+
+//check if the file or folder exists
+//return 1:File 2:Folder -1,0:Invalid path
+function checkFileOrFolder(path) {
+	try {
+		var stat = fs.statSync(path);
+		if(stat.isFile() == true){
+			return 1;//file
+		}else if(stat.isDirectory() == true){
+			return 2;//folder
+		}else{//unreachable
+			return 0;//invalid
+		}
+	} catch(err) {
+		if(err.code === 'ENOENT'){
+			return -1;//invalid
+		}
+	}
+}
 
 //check the position of space(' ' or '　').
 //return array of positions.
@@ -72,7 +90,7 @@ function searchAvailablePathConsideringUnnecessarySpaceWithDistance(
 			//exit
 			return;
 		}else{
-			var status = commonSearchUtil.checkFileOrFolder(availableCurrentPath);
+			var status = checkFileOrFolder(availableCurrentPath);
 			//check if availableCurrentPath is already added to availableFullPathes
 			if(availableFullPathes.indexOf([availableCurrentPath , currentDistance , status]) == -1){
 				//add availableCurrentPath to availableFullPathes
@@ -148,7 +166,7 @@ function searchAvailablePathConsideringUnnecessarySpaceWithDistance(
 			//add to pathes which are already checked
 			alreadyCheckedPathes.push(checkingFullPath);
 			//check the existence of the full path
-			switch(commonSearchUtil.checkFileOrFolder(checkingFullPath)){
+			switch(checkFileOrFolder(checkingFullPath)){
 				case -1:
 				case 0:
 					//do nothing
