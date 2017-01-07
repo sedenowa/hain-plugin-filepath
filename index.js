@@ -10,6 +10,10 @@ module.exports = (pluginContext) => {
 	//to format filepath
 	const path = require('path');
 	
+	//Util
+	var searchPathUtil = require("./util/searchPathUtil");
+	var formatStringUtil = require("./util/formatStringUtil");
+	
 	const commandHeader = "/fp";
 	
 	function initAvailableDrives(){
@@ -50,191 +54,6 @@ module.exports = (pluginContext) => {
 		}
 	}
 
-	//remove all specified characters from string
-	//return string (removed characters).
-	//arguments are not modified.
-	function removeCharacters(targetString,removingCharacterArray){
-		var copyOfTargetString = targetString;
-		for(var index = 0 ; index < removingCharacterArray.length ; index++){
-			var removingCharacter = removingCharacterArray[index];
-			switch(removingCharacter){
-				case "*":
-				case "?":
-				case "|":
-					//add '\' to characters which need '\' 
-					removingCharacter = "\\" + removingCharacter;
-				default:
-					//do nothing.
-					break;
-			}
-			copyOfTargetString = 
-				copyOfTargetString.replace(
-					new RegExp(removingCharacter,"g")
-					,""
-				);
-		}
-		return copyOfTargetString;
-	}
-	
-	//check the position of space(' ' or '　').
-	//return array of positions.
-	function checkPositionOfSpaces(targetString){
-		var positionOfSpaces = [];
-		for(var index = 0 , len = targetString.length ; index < len; index++){
-			if((targetString[index] == ' ') || (targetString[index] == '　' )){
-				positionOfSpaces.push(index);
-			}
-		}
-		return positionOfSpaces;
-	}
-
-	//search available path (considering unnecessary space)
-	function searchAvailablePathConsideringUnnecessarySpace(
-		availableFullPathes, availableCurrentPath , splittedRemainingPath
-	){
-		searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-			availableCurrentPath , splittedRemainingPath , availableFullPathes, [] , 0
-		);
-	}
-
-	function searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-		availableCurrentPath , splittedRemainingPath , availableFullPathes, 
-		 alreadyCheckedPathes , currentDistance
-	){
-		//check if splittedRemainingPath is empty
-		if(splittedRemainingPath.length == 0){
-			//check if availableCurrentPath is empty
-			if(availableCurrentPath == ""){
-				//exit
-				return;
-			}else{
-				//check if availableCurrentPath is already added to availableFullPathes
-				if(availableFullPathes.indexOf([availableCurrentPath , currentDistance]) == -1){
-					//add availableCurrentPath to availableFullPathes
-					availableFullPathes.push([availableCurrentPath , currentDistance]);
-				}
-			}
-		}else{
-			//store path to check next.
-			var checkingPath = splittedRemainingPath[0];
-			//check if checkingPath contain space
-			var positionOfSpaces = checkPositionOfSpaces(checkingPath);
-			if(positionOfSpaces.length > 0){
-				for(var index = 0 , len = positionOfSpaces.length ; index < len ; index++){
-					//remove one of the spaces from checkingPath.
-					var firstHalfOfCheckingPathRemovedSpace = checkingPath;
-					var latterHalfOfCheckingPathRemovedSpace = checkingPath;
-					var checkingPathRemovedSpace = 
-						firstHalfOfCheckingPathRemovedSpace.slice(0,positionOfSpaces[index]) + 
-						latterHalfOfCheckingPathRemovedSpace.slice(positionOfSpaces[index]+1);
-					//copy splittedRemainingPath
-					var nextSplittedRemainingPath = splittedRemainingPath.slice();
-					//check if checkingPathRemovedSpace is empty
-					if(checkingPathRemovedSpace == ""){
-						nextSplittedRemainingPath.shift();
-					}else{
-						nextSplittedRemainingPath[0] = checkingPathRemovedSpace;
-					}
-					//increment distance 
-					var nextDistance = currentDistance + 1;
-					var nextAvailableCurrentPath = availableCurrentPath;
-
-					//set the full path to check
-					var checkingFullPath = "";
-					if(availableCurrentPath == ""){
-						checkingFullPath = checkingPath;
-					}else{
-						checkingFullPath = availableCurrentPath + "\\" + checkingPath;
-					}
-					//check the path if it is checked at first
-					var alreadyCheckedFlag = false;
-					if(alreadyCheckedPathes.indexOf(checkingFullPath) >= 0){
-						alreadyCheckedFlag = true;
-					}
-
-					if(alreadyCheckedFlag == true){
-						//exit
-						return;
-					}else{
-						//when the path is checked at first
-						//call this function recursively
-						searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-							nextAvailableCurrentPath , nextSplittedRemainingPath ,
-							availableFullPathes, alreadyCheckedPathes , nextDistance
-						);
-					}
-				}
-			}
-			//set the full path to check
-			var checkingFullPath = "";
-			if(availableCurrentPath == ""){
-				checkingFullPath = checkingPath;
-			}else{
-				checkingFullPath = availableCurrentPath + "\\" + checkingPath;
-			}
-			//check the path if it is checked at first
-			var alreadyCheckedFlag = false;
-			if(alreadyCheckedPathes.indexOf(checkingFullPath) >= 0){
-				alreadyCheckedFlag = true;
-			}
-
-			if(alreadyCheckedFlag == true){
-				//exit
-				return;
-			}else{
-				//when the path is checked at first
-				//add to pathes which are already checked
-				alreadyCheckedPathes.push(checkingFullPath);
-				//check the existence of the full path 
-				switch(checkFileOrFolder(checkingFullPath)){
-					case -1:
-					case 0:
-						//do nothing
-						return;
-						break;
-					case 1://Available File
-					case 2://Available Folder
-						//copy splittedRemainingPath
-						var shiftedSplittedRemainingPath = splittedRemainingPath.slice();
-						shiftedSplittedRemainingPath.shift();
-						var nextAvailableCurrentPath = checkingFullPath;
-						var nextDistance = currentDistance;
-						//call this function recursively
-						searchAvailablePathConsideringUnnecessarySpaceWithDistance(
-							nextAvailableCurrentPath , shiftedSplittedRemainingPath ,
-							availableFullPathes, alreadyCheckedPathes , nextDistance
-						);
-						break;
-					default:
-						//do nothing
-						return;
-						break;
-				}
-			}
-		}
-	}
-	
-	//format query as below.
-	//remove spaces attached on head and bottom.
-	//normalize
-	function formatQuery(query){
-		//remove spaces attached on head and bottom.
-		var trimmedQuery = query.trim();
-
-		//remove unavailable characters.
-		var queryRemovedUnavailableCharacters = 
-			removeCharacters(trimmedQuery,['*','/','?',"\"","<",">","|","\t"]);
-
-		//normalize
-		var normalizedQuery = path.normalize(queryRemovedUnavailableCharacters);
-		if(normalizedQuery == "."){
-			normalizedQuery = "";
-		}
-		
-		//return result
-		return normalizedQuery;
-	}
-	
 	//search available drives.
 	function searchAvailableDrivesAsync(){
 		//{
@@ -289,8 +108,13 @@ module.exports = (pluginContext) => {
 	}
 	
 	function search (query, res) {
+		//
+		var sortedAvailableFullPathes = 
+			searchPathUtil.searchAvailablePath(formatStringUtil.formatString(query));
+
+		
 		//format query.
-		var normalizedQuery = formatQuery(query);
+		var normalizedQuery = formatStringUtil.formatString(query);
 
 		//check if the path is file server.
 		//if the path is file server, remove "\\" attached on head.
@@ -311,21 +135,6 @@ module.exports = (pluginContext) => {
 				splittedQuery[0] = "\\\\" + splittedQuery[0];
 			}
 		}
-		//remove empty element in splittedQuery.
-		var splittedQueryRemovedUnnecessaryElement = splittedQuery.filter(function(e){return e !== "";});
-		
-		//search available file/folder name. (considering unnecessary space)
-		var availableFullPathes = [];
-		searchAvailablePathConsideringUnnecessarySpace(availableFullPathes,"",splittedQueryRemovedUnnecessaryElement.slice());
-		
-		//sort available path candidates by distance between them and query.
-		var sortedAvailableFullPathes = availableFullPathes.slice();
-		sortedAvailableFullPathes.sort(
-			function(a,b){
-				//compare the distance
-				return ( (a[1] - b[1]) );
-			}
-		);
 
 		//add to result (when no available path is found)
 		if(sortedAvailableFullPathes.length == 0){
