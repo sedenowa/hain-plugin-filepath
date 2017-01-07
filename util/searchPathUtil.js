@@ -3,6 +3,8 @@ const fs = require('fs');
 //to format filepath
 const path = require('path');
 
+var commonUtil = require("./commonUtil");
+
 //check if the file or folder exists
 //return 1:File 2:Folder -1,0:Invalid path
 function checkFileOrFolder(path) {
@@ -102,11 +104,8 @@ function searchAvailablePathConsideringUnnecessarySpaceWithDistance(
 		if(positionOfSpaces.length > 0){
 			for(var index = 0 , len = positionOfSpaces.length ; index < len ; index++){
 				//remove one of the spaces from checkingPath.
-				var firstHalfOfCheckingPathRemovedSpace = checkingPath;
-				var latterHalfOfCheckingPathRemovedSpace = checkingPath;
-				var checkingPathRemovedSpace =
-					firstHalfOfCheckingPathRemovedSpace.slice(0,positionOfSpaces[index]) +
-					latterHalfOfCheckingPathRemovedSpace.slice(positionOfSpaces[index]+1);
+				var checkingPathRemovedSpace = 
+					commonUtil.removeCharacterWithPosition(checkingPath, positionOfSpaces[index]);
 				//copy splittedRemainingPath
 				var nextSplittedRemainingPath = splittedRemainingPath.slice();
 				//check if checkingPathRemovedSpace is empty
