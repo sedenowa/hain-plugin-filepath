@@ -271,6 +271,18 @@ module.exports = (pluginContext) => {
 		searchAvailableDrivesAsync();
 	}
 	
+	function checkFileServer(query){
+		//check if the path is file server.
+		//if the path is file server, remove "\\" attached on head.
+		var isFileServer = false;
+		if(query.indexOf("\\\\") == 0 && 
+		   query[("\\\\").length] != '\\' && 
+		   query[("\\\\").length] != undefined){
+			isFileServer = true;
+		}
+		return isFileServer;
+	}
+	
 	function startup(){
 		//Search Available Drives.
 		searchAvailableDrivesAsync();
@@ -282,10 +294,9 @@ module.exports = (pluginContext) => {
 
 		//check if the path is file server.
 		//if the path is file server, remove "\\" attached on head.
-		var isFileServer = false;
-		if(normalizedQuery.indexOf("\\\\") == 0){
-			isFileServer = true;
-			normalizedQuery.substring(("\\\\").length);
+		var isFileServer = checkFileServer(normalizedQuery);
+		if(isFileServer == true){
+			normalizedQuery = normalizedQuery.substring(("\\\\").length);
 		}
 		
 		//split by separator('\' or '/').
