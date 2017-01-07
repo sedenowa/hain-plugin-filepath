@@ -58,29 +58,6 @@ module.exports = (pluginContext) => {
 		var sortedAvailableFullPathes = 
 			searchPathUtil.searchAvailablePath(formatStringUtil.formatString(query));
 		
-		//format query.
-		var normalizedQuery = formatStringUtil.formatString(query);
-
-		//check if the path is file server.
-		//if the path is file server, remove "\\" attached on head.
-		var isFileServer = checkFileServer(normalizedQuery);
-		if(isFileServer == true){
-			normalizedQuery = normalizedQuery.substring(("\\\\").length);
-		}
-		
-		//split by separator('\' or '/').
-		var splittedQuery = normalizedQuery.split(path.sep);
-		
-		//if isFileServer is true, combine 1st and 2nd element.
-		if(isFileServer == true){
-			if(splittedQuery.length >= 2){
-				splittedQuery[1] = "\\\\" + splittedQuery[0] + "\\" + splittedQuery[1];
-				splittedQuery.shift();
-			}else if (splittedQuery.length == 1){
-				splittedQuery[0] = "\\\\" + splittedQuery[0];
-			}
-		}
-
 		//add to result (when no available path is found)
 		if(sortedAvailableFullPathes.length == 0){
 			//do nothing
@@ -127,6 +104,30 @@ module.exports = (pluginContext) => {
 						}
 					);
 				}
+			}
+		}
+
+		
+		//format query.
+		var normalizedQuery = formatStringUtil.formatString(query);
+
+		//check if the path is file server.
+		//if the path is file server, remove "\\" attached on head.
+		var isFileServer = checkFileServer(normalizedQuery);
+		if(isFileServer == true){
+			normalizedQuery = normalizedQuery.substring(("\\\\").length);
+		}
+		
+		//split by separator('\' or '/').
+		var splittedQuery = normalizedQuery.split(path.sep);
+		
+		//if isFileServer is true, combine 1st and 2nd element.
+		if(isFileServer == true){
+			if(splittedQuery.length >= 2){
+				splittedQuery[1] = "\\\\" + splittedQuery[0] + "\\" + splittedQuery[1];
+				splittedQuery.shift();
+			}else if (splittedQuery.length == 1){
+				splittedQuery[0] = "\\\\" + splittedQuery[0];
 			}
 		}
 		
