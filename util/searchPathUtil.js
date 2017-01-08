@@ -164,8 +164,10 @@ function searchAvailablePath(query) {
 }
 
 exports.addOpenCommand = function(targetPath, res){
+	//search available path
 	var sortedAvailableFullPathes = searchAvailablePath(targetPath)
-	
+
+	//add to res.
 	for(var index = 0 , len = sortedAvailableFullPathes.length ; index < len ; index++){
 		//Check state of formatted path (File or Folder or not).
 		//and set Description Message according to the state.
