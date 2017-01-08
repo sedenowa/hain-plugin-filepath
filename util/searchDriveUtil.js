@@ -1,6 +1,9 @@
 //to access filesystem
 const fs = require('fs');
 
+var commonUtil = require("./commonUtil");
+const commandHeader = commonUtil.commandHeader;
+
 var availableDrives = initAvailableDrives();
 
 function initAvailableDrives(){
@@ -56,3 +59,14 @@ exports.getAvailableDrives = function(){
 	return availableDrives;
 }
 
+exports.addRefreshCommand = function(query, res){
+	//refresh command to the end of list
+	res.add(
+		{
+			id: commandHeader + query,
+			payload: 'refresh',
+			title: "Refresh",
+			desc: "Search Available Drives Again."
+		}
+	);
+}

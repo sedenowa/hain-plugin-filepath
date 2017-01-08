@@ -11,12 +11,12 @@ module.exports = (pluginContext) => {
 	const path = require('path');
 	
 	//Utils
+	var commonUtil = require("./util/commonUtil");
 	var commonSearchUtil = require("./util/commonSearchUtil");
-	var searchPathUtil = require("./util/searchPathUtil");
 	var formatStringUtil = require("./util/formatStringUtil");
+	var searchPathUtil = require("./util/searchPathUtil");
 	var searchDriveUtil = require("./util/searchDriveUtil");
 	var complementPathUtil = require("./util/complementPathUtil");
-	var commonUtil = require("./util/commonUtil");
 	
 	//const commandHeader = "/fp";
 	const commandHeader = commonUtil.commandHeader;
@@ -118,14 +118,7 @@ module.exports = (pluginContext) => {
 		complementPathUtil.searchCandidates(formattedQuery, searchDriveUtil.getAvailableDrives(), res);
 
 		//refresh command to the end of list
-		res.add(
-			{
-				id: commandHeader + query,
-				payload: 'refresh',
-				title: "Refresh",
-				desc: "Search Available Drives Again."
-			}
-		);
+		searchDriveUtil.addRefreshCommand(query,res);
 	}
 
 	function execute (id, payload) {
