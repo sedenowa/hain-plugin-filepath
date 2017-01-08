@@ -11,11 +11,15 @@ module.exports = (pluginContext) => {
 	const path = require('path');
 	
 	//Utils
+	var commonSearchUtil = require("./util/commonSearchUtil");
 	var searchPathUtil = require("./util/searchPathUtil");
 	var formatStringUtil = require("./util/formatStringUtil");
 	var searchDriveUtil = require("./util/searchDriveUtil");
+	var complementPathUtil = require("./util/complementPathUtil");
+	var commonUtil = require("./util/commonUtil");
 	
-	const commandHeader = "/fp";
+	//const commandHeader = "/fp";
+	const commandHeader = commonUtil.commandHeader;
 	
 	//check if the file or folder exists
 	//return 1:File 2:Folder -1,0:Invalid path
@@ -55,8 +59,10 @@ module.exports = (pluginContext) => {
 	
 	function search (query, res) {
 		//
+		var formattedQuery = formatStringUtil.formatString(query);
+		
 		var sortedAvailableFullPathes = 
-			searchPathUtil.searchAvailablePath(formatStringUtil.formatString(query));
+			searchPathUtil.searchAvailablePath(formattedQuery);
 		
 		//add to result (when no available path is found)
 		if(sortedAvailableFullPathes.length == 0){
@@ -109,146 +115,8 @@ module.exports = (pluginContext) => {
 			}
 		}
 
-		
-		//format query.
-		var normalizedQuery = formatStringUtil.formatString(query);
+		complementPathUtil.searchCandidates(formattedQuery, searchDriveUtil.getAvailableDrives(), res);
 
-		//check if the path is file server.
-		//if the path is file server, remove "\\" attached on head.
-		var isFileServer = checkFileServer(normalizedQuery);
-		if(isFileServer == true){
-			normalizedQuery = normalizedQuery.substring(("\\\\").length);
-		}
-		
-		//split by separator('\' or '/').
-		var splittedQuery = normalizedQuery.split(path.sep);
-		
-		//if isFileServer is true, combine 1st and 2nd element.
-		if(isFileServer == true){
-			if(splittedQuery.length >= 2){
-				splittedQuery[1] = "\\\\" + splittedQuery[0] + "\\" + splittedQuery[1];
-				splittedQuery.shift();
-			}else if (splittedQuery.length == 1){
-				splittedQuery[0] = "\\\\" + splittedQuery[0];
-			}
-		}
-		
-		//search available path to complement
-		var foundCandidates = [];
-		//check if the current path is empty
-		var searchingSplittedQueryBase = splittedQuery.slice();
-		var lengthOfsearchingSplittedQueryBase = searchingSplittedQueryBase.length
-		var currentDirectory;
-		var searchKeyword;
-		if(lengthOfsearchingSplittedQueryBase == 0){
-			currentDirectory = "";
-			searchKeyword = "";
-		}else if(lengthOfsearchingSplittedQueryBase == 1){
-			currentDirectory = "";
-			searchKeyword = searchingSplittedQueryBase[0];
-		}else{// length >= 2
-			currentDirectory = "";
-			for(index = 0 ; index < lengthOfsearchingSplittedQueryBase - 1 ; index++){
-				currentDirectory = currentDirectory + searchingSplittedQueryBase[index] + "\\";
-			}
-			//currentDirectory.pop();
-			searchKeyword = searchingSplittedQueryBase[lengthOfsearchingSplittedQueryBase - 1];
-		}
-		
-		//check the existence of currentDirectory.
-		if(currentDirectory == "" || checkFileOrFolder(currentDirectory) == 2){
-			//find candidates
-			if(currentDirectory == ""){
-				var availableDrives = searchDriveUtil.getAvailableDrives();
-				for (var index = 0, len = availableDrives.length ; index < len ; index++){
-					if(availableDrives[index].isAvailable == true){
-						foundCandidates.push(
-							{
-								path:availableDrives[index].driveName,
-								state:"drive"
-							}
-						);
-					}
-				}
-			}else{// when checkFileOrFolder(currentDirectory) == 2
-				//(todo) make async (use fs.readdir)
-				var foundList = fs.readdirSync(currentDirectory);
-				//foundCandidates = fs.readdirSync(currentDirectory);
-				for(var index = 0, len = foundList.length ; index < len ; index++){
-					switch(checkFileOrFolder(currentDirectory + foundList[index])){
-						case 1://file
-							foundCandidates.push(
-								{
-									path:foundList[index],
-									state:"file"
-								}
-							);
-							break;
-						case 2://folder
-							foundCandidates.push(
-								{
-									path:foundList[index],
-									state:"folder"
-								}
-							);
-							break;
-						default:
-							//do nothing
-							break;
-					}
-				}
-			}
-			
-			//filter with searchKeyword and add to res
-			for(var index = 0, len = foundCandidates.length ; index < len ; index++){
-				//check if candidates contains searchKeyword on head
-				//if(foundCandidates[index].path.toLocaleLowerCase().indexOf(searchKeyword.toLocaleLowerCase()) == 0 && foundCandidates[index].path != searchKeyword){
-				if(foundCandidates[index].path.toLocaleLowerCase().indexOf(searchKeyword.toLocaleLowerCase()) == 0){
-					//add to res.
-					var descriptionMessage = 
-						"Set this path : \"" + foundCandidates[index].path + "\"";
-					//var redirect;
-					var innerId,innerTitle,innerRedirect;
-					switch(foundCandidates[index].state){
-						case "drive":
-							innerTitle = "";
-							innerId = 
-								commandHeader + " " + 
-								currentDirectory + foundCandidates[index].path + "\\";
-							innerRedirect = innerId;
-							break;
-						case "file":
-							innerTitle = ".\\";
-							innerId = 
-								commandHeader + " " + 
-								currentDirectory + foundCandidates[index].path;
-							innerRedirect = innerId;
-							break;
-						case "folder":
-							innerTitle = ".\\";
-							innerId = 
-								commandHeader + " " + 
-								currentDirectory + foundCandidates[index].path + "\\";
-							innerRedirect = innerId;
-							break;
-					}
-					innerTitle = innerTitle + 
-						"<b>" + foundCandidates[index].path.substring(0,searchKeyword.length) + "</b>" + 
-						foundCandidates[index].path.substring(searchKeyword.length);
-					res.add(
-						{
-							//id: checkingDrive,
-							id: innerId,
-							payload: 'complement',
-							title: innerTitle,
-							desc: descriptionMessage,
-							redirect:innerRedirect
-						}
-					);
-				}
-			}
-		}
-		
 		//refresh command to the end of list
 		res.add(
 			{

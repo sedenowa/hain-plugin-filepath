@@ -136,7 +136,7 @@ function searchAvailablePathConsideringUnnecessarySpaceWithDistance(
 }
 
 function searchAvailablePathConsideringUnnecessarySpace(targetPath){
-	var splittedPath = commonSearchUtil.separatePath(targetPath);
+	var splittedPath = commonSearchUtil.separatePath(targetPath,true);
 	var availableFullPathes = [];
 	searchAvailablePathConsideringUnnecessarySpaceWithDistance(
 		"", splittedPath, availableFullPathes,	[],	0

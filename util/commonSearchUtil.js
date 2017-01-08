@@ -38,7 +38,7 @@ function checkFileServer(query){
 }
 
 var separator = "\\";
-exports.separatePath = function(targetPath){
+exports.separatePath = function(targetPath, removeEmptyElementFlag){
 	//split path
 	//check if the path is file server.
 	//if the path is file server, remove "\\" attached on head.
@@ -59,7 +59,9 @@ exports.separatePath = function(targetPath){
 			splittedPath[0] = networkHeader + splittedPath[0];
 		}
 	}
-	//remove empty element in splittedQuery.
-	splittedPath = splittedPath.filter(function(e){return e !== "";});
+	if(removeEmptyElementFlag == true){
+		//remove empty element in splittedQuery.
+		splittedPath = splittedPath.filter(function(e){return e !== "";});
+	}
 	return splittedPath;
 }
