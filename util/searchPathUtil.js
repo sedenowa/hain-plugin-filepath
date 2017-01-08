@@ -176,6 +176,7 @@ exports.addOpenCommand = function(targetPath, res){
 		var distance = sortedAvailableFullPathes[index][1];
 		var status = sortedAvailableFullPathes[index][2];
 		var addToResFlag = false;
+		var innerIcon = "";
 		//switch(checkFileOrFolder(availableFullPath)){
 		switch(status){
 			case -1://invalid
@@ -188,6 +189,7 @@ exports.addOpenCommand = function(targetPath, res){
 				var filename = availableFullPath.slice().split(path.sep).pop();
 				descriptionMessage = "Open this File : \"" + filename + 
 					"\" ( Distance = " + distance + " )";
+				innerIcon = "#fa fa-file-o";
 				addToResFlag = true;
 				break;
 			case 2://folder
@@ -196,6 +198,7 @@ exports.addOpenCommand = function(targetPath, res){
 				var foldername = availableFullPath.slice().split(path.sep).pop();	
 				descriptionMessage = "Open this Folder : \"" + foldername + 
 					"\" ( Distance = " + distance + " )";
+				innerIcon = "#fa fa-folder-open-o";
 				addToResFlag = true;
 				break;
 			default:

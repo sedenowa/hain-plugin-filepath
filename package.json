@@ -9,7 +9,7 @@
 	"hain": {
 		"prefix": "/fp",
 		"usage": "type /fp and file or folder's path",
-		"icon": "#fa fa-link",
+		"icon": "#fa fa-search",
 		"redirect": "/fp "
 	},
 	"main": "index.js",

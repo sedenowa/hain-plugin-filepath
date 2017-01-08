@@ -66,6 +66,7 @@ exports.addRefreshCommand = function(query, res){
 			id: commandHeader + query,
 			payload: 'refresh',
 			title: "Refresh",
+			icon: "#fa fa-refresh",
 			desc: "Search Available Drives Again."
 		}
 	);
