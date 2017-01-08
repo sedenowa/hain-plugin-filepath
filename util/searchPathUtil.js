@@ -193,7 +193,7 @@ exports.addOpenCommand = function(targetPath, res){
 			case 2://folder
 				//extract folder name
 				//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
-				var foldername = availableFullPath.slice().split("\\").pop();	
+				var foldername = availableFullPath.slice().split(path.sep).pop();	
 				descriptionMessage = "Open this Folder : \"" + foldername + 
 					"\" ( Distance = " + distance + " )";
 				addToResFlag = true;

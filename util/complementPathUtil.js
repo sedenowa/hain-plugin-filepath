@@ -5,7 +5,6 @@ const path = require('path');
 
 var commonUtil = require("./commonUtil");
 var commonSearchUtil = require("./commonSearchUtil");
-//var searchDriveUtil = require("./searchDriveUtil");
 
 const commandHeader = commonUtil.commandHeader;
 
