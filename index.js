@@ -11,15 +11,11 @@ module.exports = (pluginContext) => {
 	const path = require('path');
 	
 	//Utils
-	var commonUtil = require("./util/commonUtil");
 	var commonSearchUtil = require("./util/commonSearchUtil");
 	var formatStringUtil = require("./util/formatStringUtil");
 	var searchPathUtil = require("./util/searchPathUtil");
 	var searchDriveUtil = require("./util/searchDriveUtil");
 	var complementPathUtil = require("./util/complementPathUtil");
-	
-	//const commandHeader = "/fp";
-	const commandHeader = commonUtil.commandHeader;
 	
 	//check if the file or folder exists
 	//return 1:File 2:Folder -1,0:Invalid path
@@ -58,63 +54,13 @@ module.exports = (pluginContext) => {
 	}
 	
 	function search (query, res) {
-		//
+		//format query.
 		var formattedQuery = formatStringUtil.formatString(query);
 		
-		var sortedAvailableFullPathes = 
-			searchPathUtil.searchAvailablePath(formattedQuery);
+		//search available path considering unnecessary spaces.
+		searchPathUtil.addOpenCommand(formattedQuery, res);
 		
-		//add to result (when no available path is found)
-		if(sortedAvailableFullPathes.length == 0){
-			//do nothing
-		}else{//add to result (when no available path is found)
-			for(var index = 0 , len = sortedAvailableFullPathes.length ; index < len ; index++){
-				//Check state of formatted path (File or Folder or not).
-				//and set Description Message according to the state.
-				var descriptionMessage = "";
-				var availableFullPath = sortedAvailableFullPathes[index][0].slice();
-				var distance = sortedAvailableFullPathes[index][1];
-				var status = sortedAvailableFullPathes[index][2];
-				var addToResFlag = false;
-				//switch(checkFileOrFolder(availableFullPath)){
-				switch(status){
-					case -1://invalid
-					case 0://invalid
-						//descriptionMessage = "Not File/Folder. Cannot open."
-						break;
-					case 1://file
-						//extract file name
-						//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
-						var filename = availableFullPath.slice().split("\\").pop();
-						descriptionMessage = "Open this File : \"" + filename + 
-							"\" ( Distance = " + distance + " )";
-						addToResFlag = true;
-						break;
-					case 2://folder
-						//extract folder name
-						//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
-						var foldername = availableFullPath.slice().split("\\").pop();	
-						descriptionMessage = "Open this Folder : \"" + foldername + 
-							"\" ( Distance = " + distance + " )";
-						addToResFlag = true;
-						break;
-					default:
-						break;
-				}
-				//add to res.
-				if(addToResFlag == true){
-					res.add(
-						{
-							id: availableFullPath,
-							payload: 'open',
-							title: availableFullPath,
-							desc: descriptionMessage
-						}
-					);
-				}
-			}
-		}
-
+		//search available path to complement
 		complementPathUtil.searchCandidates(formattedQuery, searchDriveUtil.getAvailableDrives(), res);
 
 		//refresh command to the end of list

@@ -145,7 +145,7 @@ function searchAvailablePathConsideringUnnecessarySpace(targetPath){
 }
 
 //search available path
-exports.searchAvailablePath = function(query) {
+function searchAvailablePath(query) {
 	//search available file/folder name. (considering unnecessary space)
 	var availableFullPathes =
 	searchAvailablePathConsideringUnnecessarySpace(query);
@@ -161,4 +161,54 @@ exports.searchAvailablePath = function(query) {
 		);
 	}
 	return sortedAvailableFullPathes;
+}
+
+exports.addOpenCommand = function(targetPath, res){
+	var sortedAvailableFullPathes = searchAvailablePath(targetPath)
+	
+	for(var index = 0 , len = sortedAvailableFullPathes.length ; index < len ; index++){
+		//Check state of formatted path (File or Folder or not).
+		//and set Description Message according to the state.
+		var descriptionMessage = "";
+		var availableFullPath = sortedAvailableFullPathes[index][0].slice();
+		var distance = sortedAvailableFullPathes[index][1];
+		var status = sortedAvailableFullPathes[index][2];
+		var addToResFlag = false;
+		//switch(checkFileOrFolder(availableFullPath)){
+		switch(status){
+			case -1://invalid
+			case 0://invalid
+				//descriptionMessage = "Not File/Folder. Cannot open."
+				break;
+			case 1://file
+				//extract file name
+				//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
+				var filename = availableFullPath.slice().split(path.sep).pop();
+				descriptionMessage = "Open this File : \"" + filename + 
+					"\" ( Distance = " + distance + " )";
+				addToResFlag = true;
+				break;
+			case 2://folder
+				//extract folder name
+				//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
+				var foldername = availableFullPath.slice().split("\\").pop();	
+				descriptionMessage = "Open this Folder : \"" + foldername + 
+					"\" ( Distance = " + distance + " )";
+				addToResFlag = true;
+				break;
+			default:
+				break;
+		}
+		//add to res.
+		if(addToResFlag == true){
+			res.add(
+				{
+					id: availableFullPath,
+					payload: 'open',
+					title: availableFullPath,
+					desc: descriptionMessage
+				}
+			);
+		}
+	}
 }
