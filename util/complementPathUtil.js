@@ -109,7 +109,7 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 						innerId = 
 							commandHeader + " " + 
 							currentDirectory + foundCandidates[index].path;
-						innerIcon = "#fa fa-file-o";
+						innerIcon = "#fa fa-file";
 						innerRedirect = innerId;
 						break;
 					case "folder":
