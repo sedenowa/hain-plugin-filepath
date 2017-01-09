@@ -115,6 +115,7 @@ function searchAvailablePathConsideringUnnecessarySpaceWithDistance(
 					break;
 				case 1://Available File
 				case 2://Available Folder
+				case 3://Available File Server
 					//copy splittedRemainingPath
 					var shiftedSplittedRemainingPath = splittedRemainingPath.slice();
 					shiftedSplittedRemainingPath.shift();
@@ -201,6 +202,15 @@ exports.addOpenCommand = function(targetPath, res){
 				innerIcon = "#fa fa-folder-open-o";
 				addToResFlag = true;
 				break;
+			case 3://file server
+				//extract folder name
+				var foldername = availableFullPath.slice().split(path.sep).pop();	
+				descriptionMessage = "Open this File Server : \"" + foldername + 
+					"\" ( Distance = " + distance + " )";
+				//innerIcon = "#fa fa-folder-open-o";
+				innerIcon = "#fa fa-server";
+				addToResFlag = true;
+				break;
 			default:
 				break;
 		}
@@ -211,6 +221,7 @@ exports.addOpenCommand = function(targetPath, res){
 					id: availableFullPath,
 					payload: 'open',
 					title: availableFullPath,
+					icon: innerIcon,
 					desc: descriptionMessage
 				}
 			);
