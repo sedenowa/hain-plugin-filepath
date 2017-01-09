@@ -94,13 +94,14 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 				var descriptionMessage = 
 					"Set this path : \"" + foundCandidates[index].path + "\"";
 				//var redirect;
-				var innerId, innerTitle, innerRedirect;
+				var innerId, innerTitle, innerIcon, innerRedirect;
 				switch(foundCandidates[index].state){
 					case "drive":
 						innerTitle = "";
 						innerId = 
 							commandHeader + " " + 
 							currentDirectory + foundCandidates[index].path + "\\";
+						innerIcon = "#fa fa-hdd-o";
 						innerRedirect = innerId;
 						break;
 					case "file":
@@ -108,6 +109,7 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 						innerId = 
 							commandHeader + " " + 
 							currentDirectory + foundCandidates[index].path;
+						innerIcon = "#fa fa-file";
 						innerRedirect = innerId;
 						break;
 					case "folder":
@@ -115,6 +117,7 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 						innerId = 
 							commandHeader + " " + 
 							currentDirectory + foundCandidates[index].path + "\\";
+						innerIcon = "#fa fa-folder";
 						innerRedirect = innerId;
 						break;
 				}
@@ -127,6 +130,7 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 						id: innerId,
 						payload: 'complement',
 						title: innerTitle,
+						icon: innerIcon,
 						desc: descriptionMessage,
 						redirect:innerRedirect
 					}

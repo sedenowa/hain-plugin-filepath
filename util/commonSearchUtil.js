@@ -3,17 +3,20 @@ const fs = require('fs');
 //to format filepath
 const path = require('path');
 
-//var commonUtil = require("./commonUtil");
-
 //check if the file or folder exists
-//return 1:File 2:Folder -1,0:Invalid path
+//return 1:File 2:Folder 3:FileServer -1,0:Invalid path
 exports.checkFileOrFolder = function(path) {
 	try {
 		var stat = fs.statSync(path);
 		if(stat.isFile() == true){
 			return 1;//file
 		}else if(stat.isDirectory() == true){
-			return 2;//folder
+			//check drive or fileserver
+			if(checkFileServerRootFormat(path) == true){
+				return 3;//fileserver
+			}else{
+				return 2;//folder
+			}
 		}else{//unreachable
 			return 0;//invalid
 		}
@@ -37,8 +40,23 @@ function checkFileServer(query){
 	return isFileServer;
 }
 
-var separator = "\\";
-exports.separatePath = function(targetPath, removeEmptyElementFlag){
+var separator = path.sep;
+function checkFileServerRootFormat(path){
+	if(checkFileServer(path) == true){
+		var splittedPath = path.substring(("\\\\").length).split(separator);
+		if(splittedPath.length >= 2){
+			splittedPath[1] = networkHeader + splittedPath[0] + separator + splittedPath[1];
+			splittedPath.shift();
+			splittedPath = splittedPath.filter(function(e){return e !== "";});
+			if(splittedPath.length==1){
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function innerSeparatePath(targetPath, removeEmptyElementFlag){
 	//split path
 	//check if the path is file server.
 	//if the path is file server, remove "\\" attached on head.
@@ -65,3 +83,4 @@ exports.separatePath = function(targetPath, removeEmptyElementFlag){
 	}
 	return splittedPath;
 }
+exports.separatePath = innerSeparatePath;
