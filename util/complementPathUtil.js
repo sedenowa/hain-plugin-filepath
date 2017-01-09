@@ -33,6 +33,52 @@ function extractKeywords(formattedQuery){
 	return [currentDirectory, searchKeyword];
 }
 
+//ex tags: ["<b>","</b>"]
+function emphasize(target, keyword){
+	var tag = ["<b>","</b>"];
+	var empFlag = false;
+	var eval = 0;
+	var ret = "";
+	var checkingPos = 0;
+	var innerTarget = target;
+	for(var indexOfKeyword = 0, lengthOfKeyword = keyword.length ; indexOfKeyword < lengthOfKeyword ; indexOfKeyword++){
+		var foundPos = innerTarget.toLocaleLowerCase().indexOf(keyword[indexOfKeyword].toLocaleLowerCase());
+		if(foundPos == -1){
+			eval = eval - 1;
+			if(indexOfKeyword == lengthOfKeyword - 1){
+				if(empFlag == true){
+					ret = ret + tag[1];
+				}
+				ret = ret + innerTarget;
+			}
+		}else{
+			eval = eval + 1;
+			if(empFlag == false){
+				ret = ret + innerTarget.substring(0, foundPos);
+				ret = ret + tag[0];
+				ret = ret + innerTarget[foundPos];
+				innerTarget = innerTarget.substring(foundPos + 1);
+				empFlag = true;
+			}else{
+				if(foundPos > 0){ ret = ret + tag[1]; }
+				ret = ret + innerTarget.substring(0, foundPos);
+				if(foundPos > 0){ ret = ret + tag[0]; }
+				ret = ret + innerTarget[foundPos];
+				innerTarget = innerTarget.substring(foundPos + 1);
+			}
+			if(empFlag == true && indexOfKeyword == lengthOfKeyword - 1){
+				ret = ret + tag[1];
+				ret = ret + innerTarget;
+			}
+		}
+	}
+	if(eval > 0){
+		return ret;
+	}else{
+		return "";
+	}
+}
+
 exports.searchCandidates = function(formattedQuery, availableDrives, res){
 	var keywords = extractKeywords(formattedQuery);
 	var currentDirectory = keywords[0];
@@ -89,7 +135,9 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 		for(var index = 0, len = foundCandidates.length ; index < len ; index++){
 			//check if candidates contains searchKeyword on head
 			var candidate = foundCandidates[index].path;
-			if(foundCandidates[index].path.toLocaleLowerCase().indexOf(searchKeyword.toLocaleLowerCase()) == 0){
+			var emphasizedCandidate = emphasize(foundCandidates[index].path, searchKeyword);
+			//if(foundCandidates[index].path.toLocaleLowerCase().indexOf(searchKeyword.toLocaleLowerCase()) == 0){
+			if(emphasizedCandidate.length > 0 || searchKeyword.length == 0){
 				//add to res.
 				var descriptionMessage = 
 					"Set this path : \"" + foundCandidates[index].path + "\"";
@@ -121,9 +169,16 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 						innerRedirect = innerId;
 						break;
 				}
+				/*
 				innerTitle = innerTitle + 
 					"<b>" + foundCandidates[index].path.substring(0,searchKeyword.length) + "</b>" + 
 					foundCandidates[index].path.substring(searchKeyword.length);
+					*/
+				if(searchKeyword.length == 0){
+					innerTitle = innerTitle + foundCandidates[index].path;
+				}else{
+					innerTitle = innerTitle + emphasizedCandidate;
+				}
 				res.add(
 					{
 						//id: checkingDrive,
