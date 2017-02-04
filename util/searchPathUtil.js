@@ -178,6 +178,11 @@ exports.addOpenCommand = function(targetPath, res){
 		var status = sortedAvailableFullPathes[index][2];
 		var addToResFlag = false;
 		var innerIcon = "";
+		var sortKey = {
+			category: 1,//open command
+			status: status,
+			name: ""
+		}
 		//switch(checkFileOrFolder(availableFullPath)){
 		switch(status){
 			case -1://invalid
@@ -192,6 +197,7 @@ exports.addOpenCommand = function(targetPath, res){
 					"\" ( Distance = " + distance + " )";
 				innerIcon = "#fa fa-file-o";
 				addToResFlag = true;
+				sortKey.name = filename;
 				break;
 			case 2://folder
 				//extract folder name
@@ -201,6 +207,7 @@ exports.addOpenCommand = function(targetPath, res){
 					"\" ( Distance = " + distance + " )";
 				innerIcon = "#fa fa-folder-open-o";
 				addToResFlag = true;
+				sortKey.name = foldername;
 				break;
 			case 3://file server
 				//extract folder name
@@ -210,6 +217,7 @@ exports.addOpenCommand = function(targetPath, res){
 				//innerIcon = "#fa fa-folder-open-o";
 				innerIcon = "#fa fa-server";
 				addToResFlag = true;
+				sortKey.name = foldername;
 				break;
 			default:
 				break;
@@ -223,7 +231,8 @@ exports.addOpenCommand = function(targetPath, res){
 					title: availableFullPath,
 					icon: innerIcon,
 					desc: descriptionMessage,
-					redirect: commonUtil.commandHeader + " " + availableFullPath
+					redirect: commonUtil.commandHeader + " " + availableFullPath,
+					sortKey: sortKey
 				}
 			);
 		}
