@@ -222,7 +222,8 @@ exports.addOpenCommand = function(targetPath, res){
 					payload: 'open',
 					title: availableFullPath,
 					icon: innerIcon,
-					desc: descriptionMessage
+					desc: descriptionMessage,
+					redirect: commonUtil.commandHeader + " " + availableFullPath
 				}
 			);
 		}
