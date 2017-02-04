@@ -164,6 +164,111 @@ function searchAvailablePath(query) {
 	return sortedAvailableFullPathes;
 }
 
+// param : "A A A\B BB\C  C" 
+// return ["AAA\BBB\CC","AAA\B BB\C C"] <- available pathes removed unnecessary spaces
+function searchAvailablePathAsync(path, callback){
+	//inner function
+	// param : "A A A\B BB\C  C" 
+	// return: [["A A A","AA A","A AA","AAA"],
+	//          ["B BB","BBB"],
+	//          ["C  C","C C","CC"]]
+	function listupAllLayerSearchCandidates(path){
+		// param : "A A A"
+		// return: ["A A A","AA A","A AA","AAA"]
+		function listupSearchCandidates(string){
+			//inner function for recursive search
+			// param : [], "A A A"
+			// return: 
+			// process: [] <- ["A A A","AA A","A AA","AAA"]
+			function innerListUp(list, string){
+				// param : "a bc  "
+				// return: [1,4,5]
+				function checkPositionOfSpaces(targetString){
+					var positionOfSpaces = [];
+					for(var index = 0 , len = targetString.length ; index < len; index++){
+						if((targetString[index] == ' ') || (targetString[index] == '　' )){
+							positionOfSpaces.push(index);
+						}
+					}
+					return positionOfSpaces;
+				}
+
+				//main process
+				(function(list, string){
+					if(list.indexOf(string) < 0){
+						list.push(string);
+					}
+					var positionOfSpaces = checkPositionOfSpaces(string);
+					for(var index = 0, len = positionOfSpaces.length; index < len; index++){
+						var stringRemovedOneSpace = commonUtil.removeCharacterWithPosition(string, positionOfSpaces[index]);
+						innerListUp(list, stringRemovedOneSpace);
+					}
+				})(list, string);
+			}
+
+			//main process
+			return (function(string){
+				var list = [];
+				innerListUp(list, string);
+				return list;
+			})(string);
+		}
+
+		//main process
+		return (function(path){
+			var listAllLayer = [];
+			var separatedPath = commonSearchUtil.separatePath(path, true);
+			for(var index = 0, len = separatedPath.length; index < len; index++){
+				listAllLayer.push(listupSearchCandidates(separatedPath[index]));
+			}
+			return listAllLayer;
+		})(path);
+	}
+	
+	//import fs library
+	const fs = require('fs');
+	
+	//inner function for recursive search
+	function innerSearch(foundPathes, currentPath, listRemainingLayer, callback){
+		var len = listRemainingLayer.length;
+		if(len > 0){
+			var list = listRemainingLayer[0];
+			let copy = listRemainingLayer.slice();
+			copy.shift();
+			for(var index = 0, len2 = list.length; index < len2; index++){
+				let target = "";
+				if(currentPath != ""){
+					target = target + currentPath + "\\";
+				}
+				target = target + list[index];
+				fs.stat(target, function(err, stats){
+					if(err){
+						//console.log("err");
+					}else if(stats.isFile() || stats.isDirectory()){
+						innerSearch(foundPathes, target ,copy, callback);
+					}else{
+						//console.log("else");
+					}
+				});
+			}
+		}else{
+			if(foundPathes.indexOf(currentPath) < 0){
+				foundPathes.push(currentPath);
+				callback(currentPath);
+			}
+		}
+	}
+	
+	//main process
+	return (function(path, callback){
+		var foundPathes = [];
+		var listAllLayer = listupAllLayerSearchCandidates(path);
+		innerSearch(foundPathes, "", listAllLayer, callback);
+		return foundPathes;
+	})(path, callback);
+}
+
+//add open command
 exports.addOpenCommand = function(targetPath, res){
 	//search available path
 	var sortedAvailableFullPathes = searchAvailablePath(targetPath)
