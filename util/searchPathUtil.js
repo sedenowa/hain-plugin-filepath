@@ -181,7 +181,6 @@ exports.searchAvailablePathAsync = function(path, res){
 		})(foundPathes, currentPath, listRemainingLayer, res);
 	}
 	
-	
 	//main process
 	return (function(path, res){
 		if(path.length > 0){

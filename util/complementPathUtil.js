@@ -6,7 +6,6 @@ const path = require('path');
 var commonUtil = require("./commonUtil");
 var commonSearchUtil = require("./commonSearchUtil");
 
-
 exports.searchCandidates = function(formattedQuery, availableDrives, res){
 	//param: "C:\AAA\BBB"
 	//return ["C:\AAA", "BBB"]
