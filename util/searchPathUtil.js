@@ -299,7 +299,7 @@ exports.searchAvailablePathAsync = function(path, res){
 						icon: innerIcon,
 						desc: descriptionMessage,
 						redirect: commonUtil.commandHeader + " " + availableFullPath,
-						group: "Available Pathes"
+						group: group
 					}
 				);
 			}
