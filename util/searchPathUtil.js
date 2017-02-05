@@ -6,8 +6,10 @@ const path = require('path');
 var commonUtil = require("./commonUtil");
 var commonSearchUtil = require("./commonSearchUtil");
 
+/*
 //check the position of space(' ' or '　').
 //return array of positions.
+
 function checkPositionOfSpaces(targetString){
 	var positionOfSpaces = [];
 	for(var index = 0 , len = targetString.length ; index < len; index++){
@@ -163,10 +165,11 @@ function searchAvailablePath(query) {
 	}
 	return sortedAvailableFullPathes;
 }
+*/
 
 // param : "A A A\B BB\C  C" 
 // return ["AAA\BBB\CC","AAA\B BB\C C"] <- available pathes removed unnecessary spaces
-function searchAvailablePathAsync(path, callback){
+exports.searchAvailablePathAsync = function(path, res){
 	//inner function
 	// param : "A A A\B BB\C  C" 
 	// return: [["A A A","AA A","A AA","AAA"],
@@ -229,47 +232,129 @@ function searchAvailablePathAsync(path, callback){
 	const fs = require('fs');
 	
 	//inner function for recursive search
-	function innerSearch(foundPathes, currentPath, listRemainingLayer, callback){
-		var len = listRemainingLayer.length;
-		if(len > 0){
-			var list = listRemainingLayer[0];
-			let copy = listRemainingLayer.slice();
-			copy.shift();
-			for(var index = 0, len2 = list.length; index < len2; index++){
-				let target = "";
-				if(currentPath != ""){
-					target = target + currentPath + "\\";
-				}
-				target = target + list[index];
-				fs.stat(target, function(err, stats){
-					if(err){
-						//console.log("err");
-					}else if(stats.isFile() || stats.isDirectory()){
-						innerSearch(foundPathes, target ,copy, callback);
-					}else{
-						//console.log("else");
-					}
-				});
+	//add to res in this function
+	function innerSearch(foundPathes, currentPath, listRemainingLayer, res){
+		//add to res
+		function innerAddOpenCommand(targetPath, res){
+			//add to res.
+			//Check state of formatted path (File or Folder or not).
+			//and set Description Message according to the state.
+			var descriptionMessage = "";
+			//var availableFullPath = sortedAvailableFullPathes[index][0].slice();
+			//var distance = sortedAvailableFullPathes[index][1];
+			//var status = sortedAvailableFullPathes[index][2];
+
+			var availableFullPath = targetPath;
+			var distance = "X";
+			var status = 1;
+
+			var addToResFlag = false;
+			var innerIcon = "";
+			var group = "";
+			switch(status){
+				case -1://invalid
+				case 0://invalid
+					//descriptionMessage = "Not File/Folder. Cannot open."
+					break;
+				case 1://file
+					//extract file name
+					//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
+					var filename = availableFullPath.slice().split(path.sep).pop();
+					descriptionMessage = "Open this File : \"" + filename + 
+						"\" ( Distance = " + distance + " )";
+					innerIcon = "#fa fa-file-o";
+					addToResFlag = true;
+					group = "Available Pathes : File";
+					break;
+				case 2://folder
+					//extract folder name
+					//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
+					var foldername = availableFullPath.slice().split(path.sep).pop();	
+					descriptionMessage = "Open this Folder : \"" + foldername + 
+						"\" ( Distance = " + distance + " )";
+					innerIcon = "#fa fa-folder-open-o";
+					addToResFlag = true;
+					group = "Available Pathes : Folder";
+					break;
+				case 3://file server
+					//extract folder name
+					var foldername = availableFullPath.slice().split(path.sep).pop();	
+					descriptionMessage = "Open this File Server : \"" + foldername + 
+						"\" ( Distance = " + distance + " )";
+					//innerIcon = "#fa fa-folder-open-o";
+					innerIcon = "#fa fa-server";
+					addToResFlag = true;
+					group = "Available Pathes : File Server";
+					break;
+				default:
+					break;
 			}
-		}else{
-			if(foundPathes.indexOf(currentPath) < 0){
-				foundPathes.push(currentPath);
-				callback(currentPath);
+			//add to res.
+			if(addToResFlag == true){
+				res.add(
+					{
+						id: availableFullPath,
+						payload: 'open',
+						title: availableFullPath,
+						icon: innerIcon,
+						desc: descriptionMessage,
+						redirect: commonUtil.commandHeader + " " + availableFullPath,
+						group: "Available Pathes"
+					}
+				);
 			}
 		}
+		
+		//main process
+		(function(foundPathes, currentPath, listRemainingLayer, res){
+			var len = listRemainingLayer.length;
+			if(len > 0){
+				var list = listRemainingLayer[0];
+				let copy = listRemainingLayer.slice();
+				copy.shift();
+				for(var index = 0, len2 = list.length; index < len2; index++){
+					let target = "";
+					if(currentPath != ""){
+						target = target + currentPath + "\\";
+					}
+					target = target + list[index];
+					fs.stat(target, function(err, stats){
+						if(err){
+							//console.log("err");
+						}else if(stats.isFile() || stats.isDirectory()){
+							innerSearch(foundPathes, target ,copy, res);
+						}else{
+							//console.log("else");
+						}
+					});
+				}
+			}else{
+				if(foundPathes.indexOf(currentPath) < 0){
+					foundPathes.push(currentPath);
+					//callback(currentPath, res);
+					innerAddOpenCommand(currentPath, res);
+				}
+			}
+		})(foundPathes, currentPath, listRemainingLayer, res);
 	}
 	
+	
 	//main process
-	return (function(path, callback){
-		var foundPathes = [];
-		var listAllLayer = listupAllLayerSearchCandidates(path);
-		innerSearch(foundPathes, "", listAllLayer, callback);
-		return foundPathes;
-	})(path, callback);
+	return (function(path, res){
+		if(path.length > 0){
+			var foundPathes = [];
+			var listAllLayer = listupAllLayerSearchCandidates(path);
+			innerSearch(foundPathes, "", listAllLayer, res);
+			return foundPathes;
+		}
+	})(path, res);
 }
 
+
+/*
 //add open command
 exports.addOpenCommand = function(targetPath, res){
+//function addOpenCommand(targetPath, res){
 	//search available path
 	var sortedAvailableFullPathes = searchAvailablePath(targetPath)
 
@@ -337,9 +422,11 @@ exports.addOpenCommand = function(targetPath, res){
 					icon: innerIcon,
 					desc: descriptionMessage,
 					redirect: commonUtil.commandHeader + " " + availableFullPath,
-					sortKey: sortKey
-				}
+					sortKey: sortKey,
+					group: "Available Pathes"
+ 				}
 			);
 		}
 	}
 }
+*/
