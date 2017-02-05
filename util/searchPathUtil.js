@@ -250,7 +250,8 @@ exports.searchAvailablePathAsync = function(path, res){
 
 			var addToResFlag = false;
 			var innerIcon = "";
-			var group = "";
+			var innerGroup = "";
+			var innerRedirect = "";
 			switch(status){
 				case -1://invalid
 				case 0://invalid
@@ -264,7 +265,8 @@ exports.searchAvailablePathAsync = function(path, res){
 						"\" ( Distance = " + distance + " )";
 					innerIcon = "#fa fa-file-o";
 					addToResFlag = true;
-					group = "Available Pathes : File";
+					innerGroup = "Available Pathes : File";
+					innerRedirect = commonUtil.commandHeader + " " + availableFullPath;
 					break;
 				case 2://folder
 					//extract folder name
@@ -274,7 +276,8 @@ exports.searchAvailablePathAsync = function(path, res){
 						"\" ( Distance = " + distance + " )";
 					innerIcon = "#fa fa-folder-open-o";
 					addToResFlag = true;
-					group = "Available Pathes : Folder";
+					innerGroup = "Available Pathes : Folder";
+					innerRedirect = commonUtil.commandHeader + " " + availableFullPath + "\\";
 					break;
 				case 3://file server
 					//extract folder name
@@ -284,7 +287,8 @@ exports.searchAvailablePathAsync = function(path, res){
 					//innerIcon = "#fa fa-folder-open-o";
 					innerIcon = "#fa fa-server";
 					addToResFlag = true;
-					group = "Available Pathes : File Server";
+					innerGroup = "Available Pathes : File Server";
+					innerRedirect = commonUtil.commandHeader + " " + availableFullPath + "\\";
 					break;
 				default:
 					break;
@@ -298,8 +302,8 @@ exports.searchAvailablePathAsync = function(path, res){
 						title: availableFullPath,
 						icon: innerIcon,
 						desc: descriptionMessage,
-						redirect: commonUtil.commandHeader + " " + availableFullPath,
-						group: group
+						redirect: innerRedirect,
+						group: innerGroup
 					}
 				);
 			}
