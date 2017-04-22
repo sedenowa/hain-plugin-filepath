@@ -3,8 +3,8 @@ const fs = require('fs');
 //to format filepath
 const path = require('path');
 
-var commonUtil = require("./commonUtil");
-var commonSearchUtil = require("./commonSearchUtil");
+var commonUtil = require("./common/commonUtil");
+var commonSearchUtil = require("./common/commonSearchUtil");
 
 exports.searchCandidates = function(formattedQuery, availableDrives, res){
 	//param: "C:\AAA\BBB"
