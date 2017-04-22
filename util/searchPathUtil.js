@@ -3,8 +3,8 @@ const fs = require('fs');
 //to format filepath
 const path = require('path');
 
-var commonUtil = require("./commonUtil");
-var commonSearchUtil = require("./commonSearchUtil");
+var commonUtil = require("./common/commonUtil");
+var commonSearchUtil = require("./common/commonSearchUtil");
 
 // param : "A A A\B BB\C  C" 
 // return ["AAA\BBB\CC","AAA\B BB\C C"] <- available pathes removed unnecessary spaces

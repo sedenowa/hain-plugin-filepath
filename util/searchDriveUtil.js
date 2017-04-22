@@ -1,7 +1,7 @@
 //to access filesystem
 const fs = require('fs');
 
-var commonUtil = require("./commonUtil");
+var commonUtil = require("./common/commonUtil");
 const commandHeader = commonUtil.commandHeader;
 
 var availableDrives = initAvailableDrives();
