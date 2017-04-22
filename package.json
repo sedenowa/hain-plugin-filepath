@@ -4,7 +4,7 @@
 	"version": "0.0.11",
 	"description": "A plugin for Hain to open file or folder in explorer with its absolute path",
 	"keywords": [
-		"hain-0.6.0"
+		"hain-0.6.2"
 	],
 	"hain": {
 		"prefix": "/fp",
