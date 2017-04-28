@@ -5,6 +5,20 @@ const path = require('path');
 
 var commonUtil = require("./common/commonUtil");
 var commonSearchUtil = require("./common/commonSearchUtil");
+//to manage progress
+var progressManager = require('./common/progressManager');
+
+function debug(res){
+	//debug
+	res.add(
+		{
+			id: "xxx",
+			payload: 'open',
+			title: progressManager.getProgress(),
+			desc: progressManager.getPatternMax()
+		}
+	);
+}
 
 // param : "A A A\B BB\C  C" 
 // return ["AAA\BBB\CC","AAA\B BB\C C"] <- available pathes removed unnecessary spaces
@@ -147,7 +161,7 @@ exports.searchAvailablePathAsync = function(path, res){
 				);
 			}
 		}
-		
+
 		//main process
 		(function(foundPathes, currentPath, listRemainingLayer, res){
 			var len = listRemainingLayer.length;
@@ -164,10 +178,14 @@ exports.searchAvailablePathAsync = function(path, res){
 					fs.stat(target, function(err, stats){
 						if(err){
 							//console.log("err");
+							//progressManager.addProgress(copy);
 						}else if(stats.isFile() || stats.isDirectory()){
 							innerSearch(foundPathes, target ,copy, res);
 						}else{
-							//console.log("else");
+							//do nothing
+							//add progress
+							progressManager.addProgress(copy);
+							debug(res);
 						}
 					});
 				}
@@ -176,7 +194,26 @@ exports.searchAvailablePathAsync = function(path, res){
 					foundPathes.push(currentPath);
 					//callback(currentPath, res);
 					innerAddOpenCommand(currentPath, res);
+					//add progress
+					//progressManager.addProgress([[0]]);
+					progressManager.addProgressByNum(1);
+					debug(res);
 				}
+			}
+			if(progressManager.isSearchCompleted() == true){
+				//for debug
+				debug(res);
+				/*
+				res.add(
+					{
+						id: "xxx",
+						payload: 'open',
+						title: progressManager.getProgress(),
+						desc: progressManager.getPatternMax()
+					}
+				);
+				*/
+				//TODO execute complement of path
 			}
 		})(foundPathes, currentPath, listRemainingLayer, res);
 	}
@@ -185,8 +222,15 @@ exports.searchAvailablePathAsync = function(path, res){
 	return (function(path, res){
 		if(path.length > 0){
 			var foundPathes = [];
+			//listup all layer
 			var listAllLayer = listupAllLayerSearchCandidates(path);
+			//reset max pattern of progress
+			progressManager.resetProgress();
+			//set max pattern of progress
+			progressManager.setPatternMax(listAllLayer);
+			//search
 			innerSearch(foundPathes, "", listAllLayer, res);
+			//return
 			return foundPathes;
 		}
 	})(path, res);
