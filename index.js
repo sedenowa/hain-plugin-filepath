@@ -38,6 +38,10 @@ module.exports = (pluginContext) => {
 				//complement path (set id to query)
 				app.setQuery(id);
 				break;
+			case 'notfound':
+				//back to parent folder
+				app.setQuery(id);
+				break;
 			case 'pending':
 				break;
 			default:

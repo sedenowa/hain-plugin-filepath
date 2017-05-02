@@ -8,20 +8,31 @@ exports.getProgress = function(){
 
 var patternMax = 0;
 //getter
-exports.getPatternMax = function(){
+var getPatternMax = function(){
 	return patternMax;
-}
+};
+
+var foundPathNum = 0;
+var getFoundPathNum = function(){
+	return foundPathNum;
+};
+var addFoundPathNum = function(){
+	foundPathNum += 1;
+};
+var resetFoundPathNum = function(){
+	foundPathNum = 0;
+};
 
 var isPatternMaxLocked = false;
 
 //set patternCheckProgress to 0
 //    patternMax to 0
 //    isPatternMaxLocked to false
-var resetProgress = function(){
-
+var reset = function(){
 	patternCheckProgress = 0;
 	patternMax = 0;
 	isPatternMaxLocked = false;
+	resetFoundPathNum();
 }
 
 var setPatternMax = function(listAllLayer){
@@ -39,6 +50,15 @@ var setPatternMax = function(listAllLayer){
 			}
 			patternMax = patternNum;
 		}
+		isPatternMaxLocked = true;
+		return true;
+	}else{
+		return false;
+	}
+}
+var setPatternMaxByNum = function(max){
+	if(isPatternMaxLocked == false) {
+		patternMax = max;
 		isPatternMaxLocked = true;
 		return true;
 	}else{
@@ -77,9 +97,21 @@ var isSearchCompleted = function(){
 	}
 }
 
+var isPathAdded = function(){
+	if(getFoundPathNum() > 0){
+		return true;
+	}else{
+		return false;
+	}
+}
+
 //exports
-exports.resetProgress = resetProgress;
+exports.getFoundPathNum = getFoundPathNum;
+exports.getPatternMax = getPatternMax;
+exports.reset = reset;
 exports.setPatternMax = setPatternMax;
 exports.addProgressByRemainingList = addProgressByRemainingList;
 exports.addProgressByNum = addProgressByNum;
 exports.isSearchCompleted = isSearchCompleted;
+exports.addFoundPathNum = addFoundPathNum;
+exports.isPathAdded = isPathAdded;
