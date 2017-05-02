@@ -222,6 +222,7 @@ exports.searchAvailablePathAsync = function(path, res){
 //execute complement of path
 function executeComplementOfPath(res){
 	//TODO:execute complement of path
+	/*
 	res.add(
 		{
 			id: "",
@@ -230,4 +231,5 @@ function executeComplementOfPath(res){
 			desc: "aaa"
 		}
 	);
+	*/
 }
