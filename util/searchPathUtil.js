@@ -6,13 +6,15 @@ const path = require('path');
 //load private Utils
 var commonUtil = require("./common/commonUtil");
 var commonSearchUtil = require("./common/commonSearchUtil");
+var searchDriveUtil = require("./searchDriveUtil");
+var complementPathUtil = require("./complementPathUtil");
 
 //to manage progress
-var progressManager = require('./common/progressManager');
+var progressManager = require('./common/searchProgressManager');
 
 // param : "A A A\B BB\C  C"
 // return ["AAA\BBB\CC","AAA\B BB\C C"] <- available pathes removed unnecessary spaces
-exports.searchAvailablePathAsync = function(path, res){
+var searchAvailablePathAsync = function(path, res){
 	//inner function
 	// param : "A A A\B BB\C  C" 
 	// return: [["A A A","AA A","A AA","AAA"],
@@ -88,7 +90,9 @@ exports.searchAvailablePathAsync = function(path, res){
 			//var status = sortedAvailableFullPathes[index][2];
 
 			var availableFullPath = targetPath;
+			//TODO: calc distance
 			var distance = "X";
+			//TODO: check status
 			var status = 1;
 
 			var addToResFlag = false;
@@ -170,64 +174,79 @@ exports.searchAvailablePathAsync = function(path, res){
 							//console.log("err");
 							progressManager.addProgressByRemainingList(copy);
 							//execute complement of path
-							if(progressManager.isSearchCompleted() == true){
-								executeComplementOfPath(res);
-							}
-						}else if(stats.isFile() || stats.isDirectory()){
-							innerSearch(foundPathes, target ,copy, res);
 						}else{
-							//do nothing
-							//add progress
-							//progressManager.addProgressByRemainingList(copy);
-							//if(progressManager.isSearchCompleted() == true){
-							//	executeComplementOfPath();
-							//}
+							if(stats.isFile() || stats.isDirectory()){
+								innerSearch(foundPathes, target ,copy, res);
+							}
 						}
+						//check progress
+						checkProgress(path, res);
 					});
 				}
-			}else{
+			}else{// len == 0
 				if(foundPathes.indexOf(currentPath) < 0){
 					foundPathes.push(currentPath);
 					//callback(currentPath, res);
 					innerAddOpenCommand(currentPath, res);
 					//add progress
 					progressManager.addProgressByNum(1);
-					//execute complement of path
-					if(progressManager.isSearchCompleted() == true){
-						executeComplementOfPath(res);
-					}
+					progressManager.addFoundPathNum();
 				}
+				//check progress
+				//checkProgress(path, res);
 			}
+			//check progress
+			//checkProgress(path, res);
 		})(foundPathes, currentPath, listRemainingLayer, res);
 	}
 	
 	//main process
-	return (function(path, res){
-		if(path.length > 0){
+	(function(path, res){
+		if(path.length > 0) {
 			var foundPathes = [];
-			//listup all layer
-			var listAllLayer = listupAllLayerSearchCandidates(path);
-			//reset max pattern of progress
-			progressManager.resetProgress();
-			//set max pattern of progress
-			progressManager.setPatternMax(listAllLayer);
+		}
+		//listup all layer
+		var listAllLayer = listupAllLayerSearchCandidates(path);
+
+		//reset max pattern of progress
+		progressManager.reset();
+		//set max pattern of progress
+		progressManager.setPatternMax(listAllLayer);
+		//reset flag to execute complement
+		resetIsComplementOfPathStarted();
+
+		//search
+		if(path.length > 0) {
 			//search
 			innerSearch(foundPathes, "", listAllLayer, res);
-			//return
-			return foundPathes;
 		}
+
+		//check progress
+		checkProgress(path, res);
 	})(path, res);
 }
 
-//execute complement of path
-function executeComplementOfPath(res){
-	//TODO:execute complement of path
-	res.add(
-		{
-			id: "",
-			payload: "pending",
-			title: "start complement",
-			desc: "aaa"
-		}
-	);
+//
+var isComplementOfPathStarted = false;
+function resetIsComplementOfPathStarted(){
+	isComplementOfPathStarted = false;
 }
+function checkProgress(path, res){
+	//execute complement of path
+	function executeComplementOfPath(formattedQuery, res){
+		//TODO:execute complement of path
+		var availableDrives = searchDriveUtil.getAvailableDrives();
+		complementPathUtil.searchCandidates(formattedQuery, availableDrives, res);
+	}
+	//main process
+	(function () {
+		if(progressManager.isSearchCompleted() == true){
+			if(isComplementOfPathStarted == false){
+				executeComplementOfPath(path, res);
+				isComplementOfPathStarted = true;
+			}
+		}
+	})();
+}
+
+exports.searchAvailablePathAsync = searchAvailablePathAsync;
