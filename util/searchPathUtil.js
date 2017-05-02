@@ -10,7 +10,7 @@ var searchDriveUtil = require("./searchDriveUtil");
 var complementPathUtil = require("./complementPathUtil");
 
 //to manage progress
-var progressManager = require('./common/progressManager');
+var progressManager = require('./common/searchProgressManager');
 
 // param : "A A A\B BB\C  C"
 // return ["AAA\BBB\CC","AAA\B BB\C C"] <- available pathes removed unnecessary spaces
@@ -190,6 +190,7 @@ var searchAvailablePathAsync = function(path, res){
 					innerAddOpenCommand(currentPath, res);
 					//add progress
 					progressManager.addProgressByNum(1);
+					progressManager.addFoundPathNum();
 				}
 				//check progress
 				//checkProgress(path, res);
@@ -208,7 +209,7 @@ var searchAvailablePathAsync = function(path, res){
 		var listAllLayer = listupAllLayerSearchCandidates(path);
 
 		//reset max pattern of progress
-		progressManager.resetProgress();
+		progressManager.reset();
 		//set max pattern of progress
 		progressManager.setPatternMax(listAllLayer);
 		//reset flag to execute complement
@@ -219,7 +220,6 @@ var searchAvailablePathAsync = function(path, res){
 			//search
 			innerSearch(foundPathes, "", listAllLayer, res);
 		}
-
 
 		//check progress
 		checkProgress(path, res);
