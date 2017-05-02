@@ -32,14 +32,6 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 			//currentDirectory.pop();
 			searchKeyword = splittedQuery[lengthOfSplittedQuery - 1];
 		}
-		res.add(
-			{
-				id: "",
-				payload: 'pending',
-				title: currentDirectory,
-				desc: searchKeyword
-			}
-		);
 		return [currentDirectory, searchKeyword];
 	}
 
@@ -96,7 +88,6 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 
 	}
 
-	/*
 	function addComplementCandidateToRes
 	(currentDirectory, state, candidate, searchKeyword, emphasizedCandidate, res){
 		if(emphasizedCandidate.length > 0 || searchKeyword.length == 0){
@@ -159,70 +150,6 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 			);
 		}
 	}
-	*/
-
-	function addComplementCandidateToRes
-	(currentDirectory, state, candidate, searchKeyword, emphasizedCandidate, res){
-		if(emphasizedCandidate.length > 0 || searchKeyword.length == 0){
-			const commandHeader = commonUtil.commandHeader;
-
-			var descriptionMessage =
-				//"Set this path : \"" + foundCandidates[index].path + "\"";
-				"Set this path : \"" + candidate + "\"";
-			//var redirect;
-			var innerId, innerTitle, innerIcon, innerRedirect, innerGroup;
-			//switch(foundCandidates[index].state){
-			switch(state){
-				case "drive":
-					innerTitle = "";
-					innerId =
-						commandHeader + " " +
-						currentDirectory + candidate + "\\";
-					innerIcon = "#fa fa-hdd-o";
-					innerRedirect = innerId;
-					innerGroup = "Complement Pathes : Drive";
-					break;
-				case "file":
-					innerTitle = ".\\";
-					innerId =
-						commandHeader + " " +
-						currentDirectory + candidate;
-					innerIcon = "#fa fa-file";
-					innerRedirect = innerId;
-					innerGroup = "Complement Pathes : File";
-					break;
-				case "folder":
-					innerTitle = ".\\";
-					innerId =
-						commandHeader + " " +
-						currentDirectory + candidate + "\\";
-					innerIcon = "#fa fa-folder";
-					innerRedirect = innerId;
-					innerGroup = "Complement Pathes : Folder";
-					break;
-			}
-
-
-			if(searchKeyword.length == 0){
-				innerTitle = innerTitle + candidate;
-			}else{
-				innerTitle = innerTitle + emphasizedCandidate;
-			}
-
-			//add to res
-			res.add(
-				{
-					id: innerId,
-					payload: 'complement',
-					title: innerTitle,
-					icon: innerIcon,
-					desc: descriptionMessage,
-					redirect:innerRedirect,
-					group: innerGroup
-				}
-			);
-		}
-	}
 
 	//main process
 	(function(formattedQuery, availableDrives, res){
@@ -230,21 +157,11 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 		var currentDirectory = keywords[0];
 		var searchKeyword = keywords[1];
 		//search available path to complement
-		
 		//check if the current directory is empty or not
 		//empty (suggest available drives)
 		if(currentDirectory == ""){
 			//search available path to complement
 			//var foundCandidates = [];
-
-			res.add(
-				{
-					id: "",
-					payload: 'pending',
-					title: "aaa",
-					desc: "aaa"
-				}
-			);
 
 			//listup available drives
 			for (var index = 0, len = availableDrives.length ; index < len ; index++){
@@ -275,39 +192,9 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 						if(err){
 							//console.log("err");
 						}else{
-							for(var index = 0, len = list.length ; index < len ; index++){
-								//check the status of currentpath async
-								let originalCandidate = list[index];
-
-								/*
-								fs.stat(currentDirectory + originalCandidate, function(err, stats){
-									if(err){
-										//console.log("err");
-									}else if(stats.isFile() || stats.isDirectory()){
-										//filter
-										var filteredCandidate = filter(originalCandidate, searchKeyword);
-										var emphasizedCandidate = filteredCandidate[0];
-										var eval = filteredCandidate[1];
-										if(eval > 0 || searchKeyword.length == 0){
-											//add to res
-											if(stats.isFile() == true){
-												addComplementCandidateToRes(
-													currentDirectory, "file", originalCandidate,
-													searchKeyword, emphasizedCandidate, res
-												);
-											}else{
-												addComplementCandidateToRes(
-													currentDirectory, "folder", originalCandidate,
-													searchKeyword, emphasizedCandidate, res
-												);
-											}
-										}
-									}else{
-										//console.log("else");
-									}
-								});
-								*/
-								if(searchKeyword.length == 0){
+							if(searchKeyword.length == 0){
+								for(var index = 0, len = list.length ; index < len ; index++) {
+									let originalCandidate = list[index];
 									//add to res
 									fs.stat(currentDirectory + originalCandidate, function(err, stats){
 										if(err){
@@ -325,28 +212,17 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 											);
 										}
 									});
-								}else{
+								}
+							}else{
+								for(var index = 0, len = list.length ; index < len ; index++) {
+									let originalCandidate = list[index];
+									//filter
 									let innerSearchKeyword = searchKeyword;
-									res.add(
-										{
-											id: "",
-											payload: 'pending',
-											title: "Debug1",
-											desc: "debug1"
-										}
-									);
+
 									//filter
 									var filteredCandidate = filter(originalCandidate, innerSearchKeyword);
-									var emphasizedCandidate = filteredCandidate[0];
+									let emphasizedCandidate = filteredCandidate[0];
 									var eval = filteredCandidate[1];
-									res.add(
-										{
-											id: "",
-											payload: 'pending',
-											title: emphasizedCandidate,
-											desc: eval
-										}
-									);
 
 									//add to res
 									fs.stat(currentDirectory + originalCandidate, function(err, stats) {
@@ -362,7 +238,6 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 											);
 										}
 									});
-
 								}
 							}
 						}

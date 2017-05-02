@@ -203,9 +203,9 @@ var searchAvailablePathAsync = function(path, res){
 	(function(path, res){
 		if(path.length > 0) {
 			var foundPathes = [];
-			//listup all layer
-			var listAllLayer = listupAllLayerSearchCandidates(path);
 		}
+		//listup all layer
+		var listAllLayer = listupAllLayerSearchCandidates(path);
 
 		//reset max pattern of progress
 		progressManager.resetProgress();
@@ -219,6 +219,10 @@ var searchAvailablePathAsync = function(path, res){
 			//search
 			innerSearch(foundPathes, "", listAllLayer, res);
 		}
+
+
+		//check progress
+		checkProgress(path, res);
 	})(path, res);
 }
 
