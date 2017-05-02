@@ -22,13 +22,9 @@ module.exports = (pluginContext) => {
 		var formattedQuery = formatStringUtil.formatString(query);
 
 		//search available path considering unnecessary spaces.
-		//searchPathUtil.addOpenCommand(formattedQuery, res);
 		searchPathUtil.searchAvailablePathAsync(formattedQuery, res)
-
-		//search available path to complement
-		//var availableDrives = searchDriveUtil.getAvailableDrives();
-		//complementPathUtil.searchCandidates(formattedQuery, availableDrives, res);
-
+		//(search available path to complement)
+		//(search Available Drives.)
 	}
 
 	function execute (id, payload) {
