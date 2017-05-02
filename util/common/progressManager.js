@@ -26,15 +26,19 @@ var resetProgress = function(){
 
 var setPatternMax = function(listAllLayer){
 	if(isPatternMaxLocked == false) {
-		var patternNum = 1;
-		for(var index = 0, len = listAllLayer.length; index < len; index++){
-			var targetLayer = listAllLayer[index];
-			var targetLen = targetLayer.length;
-			if(targetLen > 0){
-				patternNum *= targetLen;
+		if(listAllLayer.length == 0){
+			patternMax = 0;
+		}else{
+			var patternNum = 1;
+			for(var index = 0, len = listAllLayer.length; index < len; index++){
+				var targetLayer = listAllLayer[index];
+				var targetLen = targetLayer.length;
+				if(targetLen > 0){
+					patternNum *= targetLen;
+				}
 			}
+			patternMax = patternNum;
 		}
-		patternMax = patternNum;
 		isPatternMaxLocked = true;
 		return true;
 	}else{

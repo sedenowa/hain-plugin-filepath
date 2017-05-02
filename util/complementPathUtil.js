@@ -5,8 +5,9 @@ const path = require('path');
 
 var commonUtil = require("./common/commonUtil");
 var commonSearchUtil = require("./common/commonSearchUtil");
+var searchDriveUtil = require("./searchDriveUtil");
 
-exports.searchCandidates = function(formattedQuery, availableDrives, res){
+var searchCandidates = function(formattedQuery, availableDrives, res){
 	//param: "C:\AAA\BBB"
 	//return ["C:\AAA", "BBB"]
 	function extractKeywords(formattedQuery){
@@ -31,6 +32,14 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 			//currentDirectory.pop();
 			searchKeyword = splittedQuery[lengthOfSplittedQuery - 1];
 		}
+		res.add(
+			{
+				id: "",
+				payload: 'pending',
+				title: currentDirectory,
+				desc: searchKeyword
+			}
+		);
 		return [currentDirectory, searchKeyword];
 	}
 
@@ -80,9 +89,14 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 		}else{
 			return ["", eval];
 		}
-	}	
-	
-	//
+	}
+
+	//search and filter child folder/files
+	function suggestChildlen(){
+
+	}
+
+	/*
 	function addComplementCandidateToRes
 	(currentDirectory, state, candidate, searchKeyword, emphasizedCandidate, res){
 		if(emphasizedCandidate.length > 0 || searchKeyword.length == 0){
@@ -145,7 +159,71 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 			);
 		}
 	}
-	
+	*/
+
+	function addComplementCandidateToRes
+	(currentDirectory, state, candidate, searchKeyword, emphasizedCandidate, res){
+		if(emphasizedCandidate.length > 0 || searchKeyword.length == 0){
+			const commandHeader = commonUtil.commandHeader;
+
+			var descriptionMessage =
+				//"Set this path : \"" + foundCandidates[index].path + "\"";
+				"Set this path : \"" + candidate + "\"";
+			//var redirect;
+			var innerId, innerTitle, innerIcon, innerRedirect, innerGroup;
+			//switch(foundCandidates[index].state){
+			switch(state){
+				case "drive":
+					innerTitle = "";
+					innerId =
+						commandHeader + " " +
+						currentDirectory + candidate + "\\";
+					innerIcon = "#fa fa-hdd-o";
+					innerRedirect = innerId;
+					innerGroup = "Complement Pathes : Drive";
+					break;
+				case "file":
+					innerTitle = ".\\";
+					innerId =
+						commandHeader + " " +
+						currentDirectory + candidate;
+					innerIcon = "#fa fa-file";
+					innerRedirect = innerId;
+					innerGroup = "Complement Pathes : File";
+					break;
+				case "folder":
+					innerTitle = ".\\";
+					innerId =
+						commandHeader + " " +
+						currentDirectory + candidate + "\\";
+					innerIcon = "#fa fa-folder";
+					innerRedirect = innerId;
+					innerGroup = "Complement Pathes : Folder";
+					break;
+			}
+
+
+			if(searchKeyword.length == 0){
+				innerTitle = innerTitle + candidate;
+			}else{
+				innerTitle = innerTitle + emphasizedCandidate;
+			}
+
+			//add to res
+			res.add(
+				{
+					id: innerId,
+					payload: 'complement',
+					title: innerTitle,
+					icon: innerIcon,
+					desc: descriptionMessage,
+					redirect:innerRedirect,
+					group: innerGroup
+				}
+			);
+		}
+	}
+
 	//main process
 	(function(formattedQuery, availableDrives, res){
 		var keywords = extractKeywords(formattedQuery);
@@ -154,9 +232,19 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 		//search available path to complement
 		
 		//check if the current directory is empty or not
+		//empty (suggest available drives)
 		if(currentDirectory == ""){
 			//search available path to complement
 			//var foundCandidates = [];
+
+			res.add(
+				{
+					id: "",
+					payload: 'pending',
+					title: "aaa",
+					desc: "aaa"
+				}
+			);
 
 			//listup available drives
 			for (var index = 0, len = availableDrives.length ; index < len ; index++){
@@ -175,15 +263,14 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 					}
 				}
 			}
-		 }else{
+		}else{//not empty (suggest available child folder/files)
 			//check the status of currentpath async
 			fs.stat(currentDirectory, function(err, stats){
 				if(err){
 					//console.log("err");
 				}else if(stats.isDirectory()){
 					//when only currentPath is folder
-					
-					//exec fs.readdir
+					//exec fs.readdir (get child folder/files)
 					fs.readdir(currentDirectory, function(err, list){
 						if(err){
 							//console.log("err");
@@ -191,6 +278,8 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 							for(var index = 0, len = list.length ; index < len ; index++){
 								//check the status of currentpath async
 								let originalCandidate = list[index];
+
+								/*
 								fs.stat(currentDirectory + originalCandidate, function(err, stats){
 									if(err){
 										//console.log("err");
@@ -217,6 +306,64 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 										//console.log("else");
 									}
 								});
+								*/
+								if(searchKeyword.length == 0){
+									//add to res
+									fs.stat(currentDirectory + originalCandidate, function(err, stats){
+										if(err){
+											//do nothing
+											//console.log("err");
+										}else if(stats.isFile() == true){
+											addComplementCandidateToRes(
+												currentDirectory, "file", originalCandidate,
+												"", originalCandidate, res
+											);
+										}else{
+											addComplementCandidateToRes(
+												currentDirectory, "folder", originalCandidate,
+												"", originalCandidate, res
+											);
+										}
+									});
+								}else{
+									let innerSearchKeyword = searchKeyword;
+									res.add(
+										{
+											id: "",
+											payload: 'pending',
+											title: "Debug1",
+											desc: "debug1"
+										}
+									);
+									//filter
+									var filteredCandidate = filter(originalCandidate, innerSearchKeyword);
+									var emphasizedCandidate = filteredCandidate[0];
+									var eval = filteredCandidate[1];
+									res.add(
+										{
+											id: "",
+											payload: 'pending',
+											title: emphasizedCandidate,
+											desc: eval
+										}
+									);
+
+									//add to res
+									fs.stat(currentDirectory + originalCandidate, function(err, stats) {
+										if (stats.isFile() == true) {
+											addComplementCandidateToRes(
+												currentDirectory, "file", originalCandidate,
+												innerSearchKeyword, emphasizedCandidate, res
+											);
+										} else {
+											addComplementCandidateToRes(
+												currentDirectory, "folder", originalCandidate,
+												innerSearchKeyword, emphasizedCandidate, res
+											);
+										}
+									});
+
+								}
 							}
 						}
 					});
@@ -225,5 +372,9 @@ exports.searchCandidates = function(formattedQuery, availableDrives, res){
 				}
 			});
 		}
+		//Search Available Drives again.
+		searchDriveUtil.searchAvailableDrivesAsync();
 	})(formattedQuery, availableDrives, res);
 }
+
+exports.searchCandidates = searchCandidates;

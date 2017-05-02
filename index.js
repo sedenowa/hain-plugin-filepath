@@ -26,11 +26,11 @@ module.exports = (pluginContext) => {
 		searchPathUtil.searchAvailablePathAsync(formattedQuery, res)
 
 		//search available path to complement
-		var availableDrives = searchDriveUtil.getAvailableDrives();
-		complementPathUtil.searchCandidates(formattedQuery, availableDrives, res);
+		//var availableDrives = searchDriveUtil.getAvailableDrives();
+		//complementPathUtil.searchCandidates(formattedQuery, availableDrives, res);
 
 		//Search Available Drives again.
-		searchDriveUtil.searchAvailableDrivesAsync();
+		//searchDriveUtil.searchAvailableDrivesAsync();
 	}
 
 	function execute (id, payload) {
