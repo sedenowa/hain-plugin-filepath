@@ -3,24 +3,14 @@ const fs = require('fs');
 //to format filepath
 const path = require('path');
 
+//load private Utils
 var commonUtil = require("./common/commonUtil");
 var commonSearchUtil = require("./common/commonSearchUtil");
+
 //to manage progress
 var progressManager = require('./common/progressManager');
 
-function debug(res){
-	//debug
-	res.add(
-		{
-			id: "xxx",
-			payload: 'open',
-			title: progressManager.getProgress(),
-			desc: progressManager.getPatternMax()
-		}
-	);
-}
-
-// param : "A A A\B BB\C  C" 
+// param : "A A A\B BB\C  C"
 // return ["AAA\BBB\CC","AAA\B BB\C C"] <- available pathes removed unnecessary spaces
 exports.searchAvailablePathAsync = function(path, res){
 	//inner function
@@ -178,14 +168,20 @@ exports.searchAvailablePathAsync = function(path, res){
 					fs.stat(target, function(err, stats){
 						if(err){
 							//console.log("err");
-							//progressManager.addProgress(copy);
+							progressManager.addProgressByRemainingList(copy);
+							//execute complement of path
+							if(progressManager.isSearchCompleted() == true){
+								executeComplementOfPath(res);
+							}
 						}else if(stats.isFile() || stats.isDirectory()){
 							innerSearch(foundPathes, target ,copy, res);
 						}else{
 							//do nothing
 							//add progress
-							progressManager.addProgress(copy);
-							debug(res);
+							//progressManager.addProgressByRemainingList(copy);
+							//if(progressManager.isSearchCompleted() == true){
+							//	executeComplementOfPath();
+							//}
 						}
 					});
 				}
@@ -195,25 +191,12 @@ exports.searchAvailablePathAsync = function(path, res){
 					//callback(currentPath, res);
 					innerAddOpenCommand(currentPath, res);
 					//add progress
-					//progressManager.addProgress([[0]]);
 					progressManager.addProgressByNum(1);
-					debug(res);
-				}
-			}
-			if(progressManager.isSearchCompleted() == true){
-				//for debug
-				debug(res);
-				/*
-				res.add(
-					{
-						id: "xxx",
-						payload: 'open',
-						title: progressManager.getProgress(),
-						desc: progressManager.getPatternMax()
+					//execute complement of path
+					if(progressManager.isSearchCompleted() == true){
+						executeComplementOfPath(res);
 					}
-				);
-				*/
-				//TODO execute complement of path
+				}
 			}
 		})(foundPathes, currentPath, listRemainingLayer, res);
 	}
@@ -234,4 +217,17 @@ exports.searchAvailablePathAsync = function(path, res){
 			return foundPathes;
 		}
 	})(path, res);
+}
+
+//execute complement of path
+function executeComplementOfPath(res){
+	//TODO:execute complement of path
+	res.add(
+		{
+			id: "",
+			payload: "pending",
+			title: "start complement",
+			desc: "aaa"
+		}
+	);
 }

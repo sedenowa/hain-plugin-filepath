@@ -1,22 +1,29 @@
 
 //searching considering white spaces
 var patternCheckProgress = 0;
+//getter
 exports.getProgress = function(){
 	return patternCheckProgress;
 }
+
 var patternMax = 0;
+//getter
 exports.getPatternMax = function(){
 	return patternMax;
 }
+
 var isPatternMaxLocked = false;
+
 //set patternCheckProgress to 0
 //    patternMax to 0
 //    isPatternMaxLocked to false
 var resetProgress = function(){
+
 	patternCheckProgress = 0;
 	patternMax = 0;
 	isPatternMaxLocked = false;
 }
+
 var setPatternMax = function(listAllLayer){
 	if(isPatternMaxLocked == false) {
 		var patternNum = 1;
@@ -34,7 +41,8 @@ var setPatternMax = function(listAllLayer){
 		return false;
 	}
 }
-var addProgress = function(remainingList){//calc pattern
+
+var addProgressByRemainingList = function(remainingList){//calc pattern
 	function calcPatterns(list){
 		var patternNum = 1;
 		for(var index = 0, len = list.length; index < len; index++){
@@ -52,6 +60,7 @@ var addProgress = function(remainingList){//calc pattern
 		return false;
 	}
 }
+
 var addProgressByNum = function(addition){
 	patternCheckProgress += addition;
 }
@@ -67,6 +76,6 @@ var isSearchCompleted = function(){
 //exports
 exports.resetProgress = resetProgress;
 exports.setPatternMax = setPatternMax;
-exports.addProgress = addProgress;
+exports.addProgressByRemainingList = addProgressByRemainingList;
 exports.addProgressByNum = addProgressByNum;
 exports.isSearchCompleted = isSearchCompleted;
