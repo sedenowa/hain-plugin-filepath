@@ -1,9 +1,12 @@
 
-
 var complementProgressNum = 0;
 var getComplementProgressNum = function(){
 	return complementProgressNum;
 };
+var addProgress = function(){
+	complementProgressNum += 1;
+}
+
 var complementCandidateNum = 0;
 var setComplementCandidateNum = function(num){
 	complementCandidateNum = num;
@@ -16,9 +19,8 @@ var addedComplementCandidateNum = 0;
 var getAddedComplementCandidateNum = function(){
 	return addedComplementCandidateNum;
 }
-
-var addProgress = function(){
-	complementProgressNum += 1;
+var addAddedComplementCandidateNum = function(){
+	addedComplementCandidateNum += 1;
 }
 
 var reset = function(){
@@ -41,10 +43,6 @@ var isComplementAdded = function(){
 	}else{
 		return false;
 	}
-}
-
-var addAddedComplementCandidateNum = function(){
-	addedComplementCandidateNum += 1;
 }
 
 exports.setComplementCandidateNum = setComplementCandidateNum;

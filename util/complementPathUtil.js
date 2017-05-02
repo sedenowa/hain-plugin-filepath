@@ -84,11 +84,8 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 			return ["", eval];
 		}
 	}
-
-	//search and filter child folder/files
-	function suggestChildlen(){
-
-	}
+	function eval(){}
+	function emphasize(){}
 
 	function addComplementCandidateToRes
 	(currentDirectory, state, candidate, searchKeyword, emphasizedCandidate, res){
@@ -131,7 +128,6 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 					break;
 			}
 
-
 			if(searchKeyword.length == 0){
 				innerTitle = innerTitle + candidate;
 			}else{
@@ -169,16 +165,6 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 
 			var len = availableDrives.length;
 			complementProgressManager.setComplementCandidateNum(len);
-			/*
-			res.add(
-				{
-					id: "",
-					payload: 'notfound',
-					title: "len of list",
-					desc: len
-				}
-			);
-			*/
 
 			//listup available drives
 			for (var index = 0; index < len ; index++){
@@ -211,16 +197,6 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 					fs.readdir(currentDirectory, function(err, list){
 						var len = list.length;
 						complementProgressManager.setComplementCandidateNum(len)
-						/*
-						res.add(
-							{
-								id: "",
-								payload: 'notfound',
-								title: "len of list",
-								desc: len
-							}
-						);
-						*/
 						if(err){
 							//console.log("err");
 							checkProgress(res, currentDirectory);
@@ -252,16 +228,6 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 								}
 							}else{
 								for(var index = 0, len = list.length ; index < len ; index++) {
-									/*
-									res.add(
-										{
-											id: "",
-											payload: 'notfound',
-											title: "aaa",
-											desc: len
-										}
-									);
-									*/
 									let originalCandidate = list[index];
 									//filter
 									let innerSearchKeyword = searchKeyword;
@@ -269,16 +235,6 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 									var filteredCandidate = filter(originalCandidate, innerSearchKeyword);
 									let emphasizedCandidate = filteredCandidate[0];
 									let eval = filteredCandidate[1];
-									/*
-									res.add(
-										{
-											id: "",
-											payload: 'notfound',
-											title: emphasizedCandidate + " : " + searchKeyword,
-											desc: eval
-										}
-									);
-									*/
 
 									if(eval > 0){
 										//add to res
@@ -320,52 +276,8 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 }
 
 function checkProgress(res, currentDirectory){
-	/*
-	res.add(
-		{
-			id: "",
-			payload: 'notfound',
-			title: "progress of complement",
-			desc: complementProgressManager.getComplementProgressNum()
-		}
-	);
-	*/
 	if(searchProgressManager.isSearchCompleted() == true &&
 		complementProgressManager.isComplementCompleted() == true){
-		/*
-		res.add(
-			{
-				id: "",
-				payload: 'notfound',
-				title: "searchProgressManager : isSearchCompleted",
-				desc: searchProgressManager.isSearchCompleted()
-			}
-		);
-		res.add(
-			{
-				id: "",
-				payload: 'notfound',
-				title: "searchProgressManager : isPathAdded",
-				desc: searchProgressManager.isPathAdded()
-			}
-		);
-		res.add(
-			{
-				id: "",
-				payload: 'notfound',
-				title: "complementProgressManager : isComplementCompleted",
-				desc: complementProgressManager.isComplementCompleted()
-			}
-		);
-		res.add(
-			{
-				id: "",
-				payload: 'notfound',
-				title: "complementProgressManager : isComplementAdded",
-				desc: complementProgressManager.isComplementAdded()
-			}
-		);
-		*/
 		if(searchProgressManager.isPathAdded() == false &&
 			complementProgressManager.isComplementAdded() == false){
 			res.add(
@@ -381,22 +293,6 @@ function checkProgress(res, currentDirectory){
 			);
 		}
 	}
-	/*
-	if(searchProgressManager.isSearchCompleted() == true &&
-		searchProgressManager.isPathAdded() == false &&
-		complementProgressManager.isComplementCompleted() == true &&
-		complementProgressManager.isComplementAdded() == false
-		){
-		res.add(
-			{
-				id: "",
-				payload: 'notfound',
-				title: "notfound",
-				desc: "notfound"
-			}
-		);
-	}
-	*/
 }
 
 exports.searchCandidates = searchCandidates;
