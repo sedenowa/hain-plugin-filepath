@@ -29,8 +29,6 @@ module.exports = (pluginContext) => {
 		//var availableDrives = searchDriveUtil.getAvailableDrives();
 		//complementPathUtil.searchCandidates(formattedQuery, availableDrives, res);
 
-		//Search Available Drives again.
-		//searchDriveUtil.searchAvailableDrivesAsync();
 	}
 
 	function execute (id, payload) {
@@ -44,14 +42,10 @@ module.exports = (pluginContext) => {
 				//complement path (set id to query)
 				app.setQuery(id);
 				break;
-			//case 'refresh':
-			//	//search available drives again.
-			//	searchDriveUtil.searchAvailableDrivesAsync();
-			//	app.setQuery(id);
-			//	break;
 			case 'pending':
+				break;
 			default:
-				return;
+				break;
 		}
 	}
 
