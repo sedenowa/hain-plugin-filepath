@@ -172,7 +172,7 @@ function complementDrives(availableDrives, searchKeyword, res){
 			if(eval > 0 || searchKeyword.length == 0){
 				//add to res
 				complementProgressManager.addAddedComplementCandidateNum();
-				complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword);
+				complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword, "drive");
 			}
 		}
 		complementProgressManager.addProgress();
@@ -204,26 +204,14 @@ function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 							//add to res
 							fs.stat(currentDirectory + originalCandidate, function(err, stats){
 								if(err){
-									//do nothing
 									//console.log("err");
+									//do nothing
 								}else if(stats.isFile() == true){
-									/*
-									addComplementCandidateToRes(
-										currentDirectory, "file", originalCandidate,
-										"", originalCandidate, res
-									);
-									*/
 									complementProgressManager.addAddedComplementCandidateNum();
-									complementSortManager.add(currentDirectory, originalCandidate, 0, searchKeyword);
+									complementSortManager.add(currentDirectory, originalCandidate, 0, searchKeyword, "file");
 								}else{
-									/*
-									addComplementCandidateToRes(
-										currentDirectory, "folder", originalCandidate,
-										"", originalCandidate, res
-									);
-									*/
 									complementProgressManager.addAddedComplementCandidateNum();
-									complementSortManager.add(currentDirectory, originalCandidate, 0, searchKeyword);
+									complementSortManager.add(currentDirectory, originalCandidate, 0, searchKeyword, "folder");
 								}
 								complementProgressManager.addProgress();
 								checkProgress(res, currentDirectory);
@@ -235,9 +223,6 @@ function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 							//filter
 							let innerSearchKeyword = searchKeyword;
 
-							//var filteredCandidate = filter(originalCandidate, innerSearchKeyword);
-							//let emphasizedCandidate = filteredCandidate[0];
-							//let eval = filteredCandidate[1];
 							let eval = evaluate(originalCandidate, innerSearchKeyword);
 							if(eval > 0){
 								//add to res
@@ -245,25 +230,11 @@ function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 									if(err){
 										//do nothing
 									}else if (stats.isFile() == true) {
-										/*
-										var emphasizedCandidate = emphasize(originalCandidate, innerSearchKeyword);
-										addComplementCandidateToRes(
-											currentDirectory, "file", originalCandidate,
-											innerSearchKeyword, emphasizedCandidate, res
-										);
-										*/
 										complementProgressManager.addAddedComplementCandidateNum();
-										complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword);
+										complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword, "file");
 									} else {
-										/*
-										var emphasizedCandidate = emphasize(originalCandidate, innerSearchKeyword);
-										addComplementCandidateToRes(
-											currentDirectory, "folder", originalCandidate,
-											innerSearchKeyword, emphasizedCandidate, res
-										);
-										*/
 										complementProgressManager.addAddedComplementCandidateNum();
-										complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword);
+										complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword, "folder");
 									}
 									complementProgressManager.addProgress();
 									checkProgress(res, currentDirectory);
@@ -319,9 +290,9 @@ function addSortedCandidates(res){
 		var currentDirectory = candidate.currentDirectory;
 		var originalCandidate = candidate.originalCandidate;
 		var keyword = candidate.keyword;
-		//TODO: select drive or file or folder
+		var state = candidate.state;
 		addComplementCandidateToRes(
-			currentDirectory, "drive", originalCandidate,
+			currentDirectory, state, originalCandidate,
 			keyword, emphasize(originalCandidate, keyword), res
 		);
 	}

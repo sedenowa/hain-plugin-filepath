@@ -1,12 +1,15 @@
 var filteredCandidates = [];
-var addFilteredCandidates = function(currentDirectory, originalCandidate, eval, keyword){
+var addFilteredCandidates = function(currentDirectory, originalCandidate, eval, keyword, state){
 	if(originalCandidate != undefined && eval != undefined){
 		var len = filteredCandidates.length;
 		if(len > 0){
 			for(var index = 0; index < len; index++){
-				var savedOriginalCandidate = filteredCandidates[index].originalCandidate;
-				var savedEval = filteredCandidates[index].eval;
-				if(savedOriginalCandidate == originalCandidate && savedEval == eval){
+				var savedCandidate = filteredCandidates[index];
+				var savedOriginalCandidate = savedCandidate.originalCandidate;
+				var savedEval = savedCandidate.eval;
+				var savedState = savedCandidate.state;
+				if(savedOriginalCandidate == originalCandidate &&
+					savedEval == eval && savedState == state){
 					//do nothing
 					return;
 				}
@@ -18,7 +21,8 @@ var addFilteredCandidates = function(currentDirectory, originalCandidate, eval, 
 				currentDirectory: currentDirectory,
 				originalCandidate: originalCandidate,
 				eval: eval,
-				keyword: keyword
+				keyword: keyword,
+				state: state
 			}
 		);
 	}
