@@ -172,8 +172,6 @@ function innerRecursiveSearch(path, searchedPathes, currentPath, listRemainingLa
 	}else{// len == 0
 		if(searchedPathes.indexOf(currentPath) < 0){
 			searchedPathes.push(currentPath);
-			//callback(currentPath, res);
-			//addOpenCommand(currentPath, res);
 			//add progress
 			progressManager.addProgressByNum(1);
 			progressManager.addFoundPathNum();
