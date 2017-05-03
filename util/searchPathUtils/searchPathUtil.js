@@ -14,7 +14,6 @@ var progressManager = require("./searchProgressManager");
 //to manage sorting
 var searchSortManager = require("./searchSortManager");
 
-
 // param : "a bc  "
 // return: [1,4,5]
 function checkPositionOfSpaces(targetString){
@@ -31,152 +30,101 @@ function checkPositionOfSpaces(targetString){
 // param : [], "A A A"
 // return:
 // process: [] <- ["A A A","AA A","A AA","AAA"]
-function innerRecursiveListUp(list, string){
-	if(list.indexOf(string) < 0){
-		list.push(string);
+function innerRecursiveListUp(candidateList, differenceList, string, difference){
+	if(candidateList.indexOf(string) < 0){
+		candidateList.push(string);
+		differenceList.push(difference);
 	}
 	var positionOfSpaces = checkPositionOfSpaces(string);
 	for(var index = 0, len = positionOfSpaces.length; index < len; index++){
 		var stringRemovedOneSpace = commonUtil.removeCharacterWithPosition(string, positionOfSpaces[index]);
-		innerRecursiveListUp(list, stringRemovedOneSpace);
+		innerRecursiveListUp(candidateList, differenceList, stringRemovedOneSpace, difference + 1);
 	}
 }
 
 // param : "A A A"
-// return: ["A A A","AA A","A AA","AAA"]
-function listupSearchCandidates(string){
-	var list = [];
-	innerRecursiveListUp(list, string);
-	return list;
+// return: [["A A A","AA A","A AA","AAA"], [0, 1, 1, 2]]
+function listupSearchCandidatesAndDifferences(string){
+	var searchCandidateList = [], differenceList = [];
+	innerRecursiveListUp(searchCandidateList, differenceList, string, 0);
+	return [searchCandidateList, differenceList];
 }
 
 //inner function
 // param : "A A A\B BB\C  C"
-// return: [["A A A","AA A","A AA","AAA"],
-//          ["B BB","BBB"],
-//          ["C  C","C C","CC"]]
-function listupAllLayerSearchCandidates(path){
-	var listAllLayer = [];
+// return: [[["A A A","AA A","A AA","AAA"],
+//           ["B BB","BBB"],
+//           ["C  C","C C","CC"]],
+//          [[0, 1, 1, 2],
+//           [0, 1],
+//           [0, 1, 2]]]
+function listupSearchCandidatesAndDifferencesAllLayer(path){
+	var candidateListsOfAllLayer = [], differenceListsOfAllLayer = [];
 	var separatedPath = commonSearchUtil.separatePath(path, true);
+
 	for(var index = 0, len = separatedPath.length; index < len; index++){
-		listAllLayer.push(listupSearchCandidates(separatedPath[index]));
+		var candidateAndDistanceLists = listupSearchCandidatesAndDifferences(separatedPath[index]);
+		var candidateList = candidateAndDistanceLists[0];
+		candidateListsOfAllLayer.push(candidateList);
+		var differenceList = candidateAndDistanceLists[1];
+		differenceListsOfAllLayer.push(differenceList);
 	}
-	return listAllLayer;
-}
-
-//add to res
-function addOpenCommand(targetPath, state, res){
-	//add to res.
-	//Check state of formatted path (File or Folder or not).
-	//and set Description Message according to the state.
-	var descriptionMessage = "";
-
-	var availableFullPath = targetPath;
-	//TODO: calc distance
-	var distance = "X";
-
-	var addToResFlag = false;
-	var innerIcon = "";
-	var innerGroup = "";
-	var innerRedirect = "";
-	switch(state){
-		case -1://invalid
-		case 0://invalid
-			//descriptionMessage = "Not File/Folder. Cannot open."
-			break;
-		case "file"://file
-			//extract file name
-			//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
-			var filename = availableFullPath.slice().split(path.sep).pop();
-			descriptionMessage = "Open this File : \"" + filename +
-				"\" ( Distance = " + distance + " )";
-			innerIcon = "#fa fa-file-o";
-			addToResFlag = true;
-			innerGroup = "Available Pathes : File";
-			innerRedirect = commonUtil.commandHeader + " " + availableFullPath;
-			break;
-		case "folder"://folder
-			//extract folder name
-			//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
-			var foldername = availableFullPath.slice().split(path.sep).pop();
-			descriptionMessage = "Open this Folder : \"" + foldername +
-				"\" ( Distance = " + distance + " )";
-			innerIcon = "#fa fa-folder-open-o";
-			addToResFlag = true;
-			innerGroup = "Available Pathes : Folder";
-			innerRedirect = commonUtil.commandHeader + " " + availableFullPath + "\\";
-			break;
-		case "drive"://file server
-			//extract folder name
-			var foldername = availableFullPath.slice().split(path.sep).pop();
-			descriptionMessage = "Open this Drive : \"" + foldername +
-				"\" ( Distance = " + distance + " )";
-			//innerIcon = "#fa fa-folder-open-o";
-			innerIcon = "#fa fa-server";
-			addToResFlag = true;
-			innerGroup = "Available Pathes : Drive";
-			innerRedirect = commonUtil.commandHeader + " " + availableFullPath + "\\";
-			break;
-		default:
-			break;
-	}
-	//add to res.
-	if(addToResFlag == true){
-		res.add(
-			{
-				id: availableFullPath,
-				payload: 'open',
-				title: availableFullPath,
-				icon: innerIcon,
-				desc: descriptionMessage,
-				redirect: innerRedirect,
-				group: innerGroup
-			}
-		);
-	}
+	return [candidateListsOfAllLayer, differenceListsOfAllLayer];
 }
 
 //inner function for recursive search
 //add to res in this function
-//TODO: calc difference
-function innerRecursiveSearch(path, searchedPathes, currentPath, listRemainingLayer, state, res){
+function innerRecursiveSearch(
+	path, searchedPathes, difference, searchedDifferences, currentPath,
+	searchCandidatesListsOfRemainingLayer, differencesListsOfRemainingLayer, state, res
+){
 	//main process
-	var len = listRemainingLayer.length;
-	if(len > 0){
-		var list = listRemainingLayer[0];
-		let copy = listRemainingLayer.slice();
-		copy.shift();
-		for(var index = 0, len2 = list.length; index < len2; index++){
+	var lengthOfRemainingLayer = searchCandidatesListsOfRemainingLayer.length;
+	if(lengthOfRemainingLayer > 0){
+		var targetSearchCandidatesList = searchCandidatesListsOfRemainingLayer[0];
+		var differencesList = differencesListsOfRemainingLayer[0];
+		let shiftedSearchCandidatesLists = searchCandidatesListsOfRemainingLayer.slice();
+		let shiftedDifferencesLists = differencesListsOfRemainingLayer.slice();
+		shiftedSearchCandidatesLists.shift();
+		shiftedDifferencesLists.shift();
+		for(var index = 0, lengthOfTargetList = targetSearchCandidatesList.length; index < lengthOfTargetList; index++){
 			let target = "";
+			let innerDifference = difference;
 			if(currentPath != ""){
 				target = target + currentPath + "\\";
 			}
-			target = target + list[index];
+			target = target + targetSearchCandidatesList[index];
+			innerDifference = innerDifference + differencesList[index];
 			fs.stat(target, function(err, stats){
 				if(err){
 					//console.log("err");
-					progressManager.addProgressByRemainingList(copy);
+					progressManager.addProgressByRemainingList(shiftedSearchCandidatesLists);
 					//execute complement of path
 				}else{
 					if(stats.isFile() == true){
-						innerRecursiveSearch(path, searchedPathes, target ,copy, "file", res);
+						innerRecursiveSearch(path, searchedPathes, innerDifference, searchedDifferences, target,
+							shiftedSearchCandidatesLists, shiftedDifferencesLists, "file", res);
 					}else if(stats.isDirectory() == true){
 						//TODO: identify folder or fileserver or drive
-						innerRecursiveSearch(path, searchedPathes, target ,copy, "folder", res);
+						innerRecursiveSearch(path, searchedPathes, innerDifference, searchedDifferences, target,
+							shiftedSearchCandidatesLists, shiftedDifferencesLists, "folder", res);
 					}
 				}
 				//check progress
 				checkProgress(path, res);
 			});
 		}
-	}else{// len == 0
+	}else{// lengthOfRemainingLayer == 0
 		if(searchedPathes.indexOf(currentPath) < 0){
 			searchedPathes.push(currentPath);
+			searchedDifferences.push(difference);
+
 			//add progress
 			progressManager.addProgressByNum(1);
 			progressManager.addFoundPathNum();
+
 			//add found path
-			searchSortManager.add(currentPath, state, 0);
+			searchSortManager.add(currentPath, state, difference);
 		}
 		//check progress
 		//checkProgress(path, res);
@@ -191,15 +139,19 @@ var searchAvailablePathAsync = function(path, res){
 	//initialize foundPathes
 	if(path.length > 0) {
 		var foundPathes = [];
+		var foundDifferences = [];
 	}
 
 	//listup all layer
-	var listAllLayer = listupAllLayerSearchCandidates(path);
+	var candidatesAndDistancesListsOfAllLayer = listupSearchCandidatesAndDifferencesAllLayer(path);
+	//var searchCandidatesListOfAllLayer = listupSearchCandidatesAndDifferencesAllLayer(path);
+	var searchCandidatesListOfAllLayer = candidatesAndDistancesListsOfAllLayer[0];
+	var distancesListOfAllLayer = candidatesAndDistancesListsOfAllLayer[1];
 
 	//reset max pattern of progress
 	progressManager.reset();
 	//set max pattern of progress
-	progressManager.setPatternMax(listAllLayer);
+	progressManager.setPatternMax(searchCandidatesListOfAllLayer);
 	//reset flag to execute complement
 	resetIsComplementOfPathStarted();
 
@@ -209,7 +161,7 @@ var searchAvailablePathAsync = function(path, res){
 	//search
 	if(path.length > 0) {
 		//search
-		innerRecursiveSearch(path, foundPathes, "", listAllLayer, "",res);
+		innerRecursiveSearch(path, foundPathes, 0, foundDifferences, "", searchCandidatesListOfAllLayer, distancesListOfAllLayer, "", res);
 	}else{
 		//check progress
 		checkProgress(path, res);
@@ -221,6 +173,71 @@ function resetIsComplementOfPathStarted(){
 	isComplementOfPathStarted = false;
 }
 
+//add to res
+function addOpenCommand(targetPath, difference, state, res){
+	//add to res.
+	//Check state of formatted path (File or Folder or not).
+	//and set Description Message according to the state.
+	var addToResFlag = false;
+	var innerIcon = "";
+	var innerGroup = "";
+	var innerRedirect = "";
+	var descriptionMessage = "";
+	switch(state){
+		case "file"://file
+			addToResFlag = true;
+			//extract file name
+			var filename = targetPath.slice().split(path.sep).pop();
+			descriptionMessage = "Open this File : \"" + filename + "\"";
+			innerIcon = "#fa fa-file-o";
+			innerGroup = "Available Pathes : File";
+			innerRedirect = commonUtil.commandHeader + " " + targetPath;
+			break;
+		case "folder"://folder
+			addToResFlag = true;
+			//extract folder name
+			var foldername = targetPath.slice().split(path.sep).pop();
+			descriptionMessage = "Open this Folder : \"" + foldername + "\"";
+			innerIcon = "#fa fa-folder-open-o";
+			innerGroup = "Available Pathes : Folder";
+			innerRedirect = commonUtil.commandHeader + " " + targetPath + "\\";
+			break;
+		case "drive"://file server
+			addToResFlag = true;
+			//extract folder name
+			var foldername = targetPath.slice().split(path.sep).pop();
+			descriptionMessage = "Open this Drive : \"" + foldername + "\"";
+			//innerIcon = "#fa fa-folder-open-o";
+			innerIcon = "#fa fa-server";
+			innerGroup = "Available Pathes : Drive";
+			innerRedirect = commonUtil.commandHeader + " " + targetPath + "\\";
+			break;
+		default:
+			break;
+	}
+
+	if(difference == 1){
+		descriptionMessage = descriptionMessage + " ( 1 white space is removed. )";
+	}else if(difference > 1){
+		descriptionMessage = descriptionMessage + " ( " + difference + " white spaces are removed. )";
+	}
+
+	//add to res.
+	if(addToResFlag == true){
+		res.add(
+			{
+				id: targetPath,
+				payload: 'open',
+				title: targetPath,
+				icon: innerIcon,
+				desc: descriptionMessage,
+				redirect: innerRedirect,
+				group: innerGroup
+			}
+		);
+	}
+}
+
 function addFoundPathesOfEachState(res, state, sortedFoundPathes){
 	var len = sortedFoundPathes.length;
 	for (var index = 0; index < len; index++) {
@@ -230,10 +247,11 @@ function addFoundPathesOfEachState(res, state, sortedFoundPathes){
 			var path = foundPath.path;
 			var difference = foundPath.difference;
 			//add to res
-			addOpenCommand(path, state, res);
+			addOpenCommand(path, difference, state, res);
 		}
 	}
 }
+
 function addSortedFoundPathes(res){
 	var sortedFoundPathes = searchSortManager.getSortedFoundPathes();
 	//add drives
@@ -246,7 +264,6 @@ function addSortedFoundPathes(res){
 
 //execute complement of path
 function executeComplementOfPath(formattedQuery, res){
-	//TODO:execute complement of path
 	var availableDrives = searchDriveUtil.getAvailableDrives();
 	complementPathUtil.searchCandidates(formattedQuery, availableDrives, res);
 }
