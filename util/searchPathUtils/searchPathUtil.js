@@ -65,31 +65,26 @@ function listupAllLayerSearchCandidates(path){
 }
 
 //add to res
-function addOpenCommand(targetPath, res){
+function addOpenCommand(targetPath, state, res){
 	//add to res.
 	//Check state of formatted path (File or Folder or not).
 	//and set Description Message according to the state.
 	var descriptionMessage = "";
-	//var availableFullPath = sortedAvailableFullPathes[index][0].slice();
-	//var distance = sortedAvailableFullPathes[index][1];
-	//var status = sortedAvailableFullPathes[index][2];
 
 	var availableFullPath = targetPath;
 	//TODO: calc distance
 	var distance = "X";
-	//TODO: check status
-	var status = 1;
 
 	var addToResFlag = false;
 	var innerIcon = "";
 	var innerGroup = "";
 	var innerRedirect = "";
-	switch(status){
+	switch(state){
 		case -1://invalid
 		case 0://invalid
 			//descriptionMessage = "Not File/Folder. Cannot open."
 			break;
-		case 1://file
+		case "file"://file
 			//extract file name
 			//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
 			var filename = availableFullPath.slice().split(path.sep).pop();
@@ -100,7 +95,7 @@ function addOpenCommand(targetPath, res){
 			innerGroup = "Available Pathes : File";
 			innerRedirect = commonUtil.commandHeader + " " + availableFullPath;
 			break;
-		case 2://folder
+		case "folder"://folder
 			//extract folder name
 			//(todo) extract BBB from "C:\AAA\BBB\" <- when unnecessary "\" exists.
 			var foldername = availableFullPath.slice().split(path.sep).pop();
@@ -111,15 +106,15 @@ function addOpenCommand(targetPath, res){
 			innerGroup = "Available Pathes : Folder";
 			innerRedirect = commonUtil.commandHeader + " " + availableFullPath + "\\";
 			break;
-		case 3://file server
+		case "drive"://file server
 			//extract folder name
 			var foldername = availableFullPath.slice().split(path.sep).pop();
-			descriptionMessage = "Open this File Server : \"" + foldername +
+			descriptionMessage = "Open this Drive : \"" + foldername +
 				"\" ( Distance = " + distance + " )";
 			//innerIcon = "#fa fa-folder-open-o";
 			innerIcon = "#fa fa-server";
 			addToResFlag = true;
-			innerGroup = "Available Pathes : File Server";
+			innerGroup = "Available Pathes : Drive";
 			innerRedirect = commonUtil.commandHeader + " " + availableFullPath + "\\";
 			break;
 		default:
@@ -143,7 +138,8 @@ function addOpenCommand(targetPath, res){
 
 //inner function for recursive search
 //add to res in this function
-function innerRecursiveSearch(path, searchedPathes, currentPath, listRemainingLayer, res){
+//TODO: calc difference
+function innerRecursiveSearch(path, searchedPathes, currentPath, listRemainingLayer, state, res){
 	//main process
 	var len = listRemainingLayer.length;
 	if(len > 0){
@@ -162,8 +158,11 @@ function innerRecursiveSearch(path, searchedPathes, currentPath, listRemainingLa
 					progressManager.addProgressByRemainingList(copy);
 					//execute complement of path
 				}else{
-					if(stats.isFile() || stats.isDirectory()){
-						innerRecursiveSearch(path, searchedPathes, target ,copy, res);
+					if(stats.isFile() == true){
+						innerRecursiveSearch(path, searchedPathes, target ,copy, "file", res);
+					}else if(stats.isDirectory() == true){
+						//TODO: identify folder or fileserver or drive
+						innerRecursiveSearch(path, searchedPathes, target ,copy, "folder", res);
 					}
 				}
 				//check progress
@@ -179,7 +178,7 @@ function innerRecursiveSearch(path, searchedPathes, currentPath, listRemainingLa
 			progressManager.addProgressByNum(1);
 			progressManager.addFoundPathNum();
 			//add found path
-			searchSortManager.add(currentPath, "file", 0);
+			searchSortManager.add(currentPath, state, 0);
 		}
 		//check progress
 		//checkProgress(path, res);
@@ -212,7 +211,7 @@ var searchAvailablePathAsync = function(path, res){
 	//search
 	if(path.length > 0) {
 		//search
-		innerRecursiveSearch(path, foundPathes, "", listAllLayer, res);
+		innerRecursiveSearch(path, foundPathes, "", listAllLayer, "",res);
 	}else{
 		//check progress
 		checkProgress(path, res);
@@ -233,7 +232,7 @@ function addFoundPathesOfEachState(res, state, sortedFoundPathes){
 			var path = foundPath.path;
 			var difference = foundPath.difference;
 			//add to res
-			addOpenCommand(path, res);
+			addOpenCommand(path, state, res);
 		}
 	}
 }
