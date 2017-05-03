@@ -39,18 +39,30 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 
 	//ex tags: ["<b>","</b>"]
 	//param : "ABCDE", ["AB","D"]
-	//return: ["<b>AB</b>C<b>D</b>E" or "", evaluation(number)]
-	function filter(target, keyword){
-		var tag = ["<b>","</b>"];
-		var empFlag = false;
+	function evaluate(target, keyword){
 		var eval = 0;
-		var ret = "";
-		var checkingPos = 0;
 		var innerTarget = target;
 		for(var indexOfKeyword = 0, lengthOfKeyword = keyword.length ; indexOfKeyword < lengthOfKeyword ; indexOfKeyword++){
 			var foundPos = innerTarget.toLocaleLowerCase().indexOf(keyword[indexOfKeyword].toLocaleLowerCase());
 			if(foundPos == -1){
 				eval = eval - 1;
+			}else{
+				eval = eval + 1;
+				innerTarget = innerTarget.substring(foundPos + 1);
+			}
+		}
+		return eval;
+	}
+	function emphasize(target, keyword){
+		var tag = ["<b>","</b>"];
+		var empFlag = false;
+		//var eval = 0;
+		var ret = "";
+		var innerTarget = target;
+		for(var indexOfKeyword = 0, lengthOfKeyword = keyword.length ; indexOfKeyword < lengthOfKeyword ; indexOfKeyword++){
+			var foundPos = innerTarget.toLocaleLowerCase().indexOf(keyword[indexOfKeyword].toLocaleLowerCase());
+			if(foundPos == -1){
+				//eval = eval - 1;
 				if(indexOfKeyword == lengthOfKeyword - 1){
 					if(empFlag == true){
 						ret = ret + tag[1];
@@ -58,7 +70,7 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 					ret = ret + innerTarget;
 				}
 			}else{
-				eval = eval + 1;
+				//eval = eval + 1;
 				if(empFlag == false){
 					ret = ret + innerTarget.substring(0, foundPos);
 					ret = ret + tag[0];
@@ -78,14 +90,8 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 				}
 			}
 		}
-		if(eval > 0){
-			return [ret, eval];
-		}else{
-			return ["", eval];
-		}
+		return ret;
 	}
-	function eval(){}
-	function emphasize(){}
 
 	function addComplementCandidateToRes
 	(currentDirectory, state, candidate, searchKeyword, emphasizedCandidate, res){
@@ -171,10 +177,12 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 				if(availableDrives[index].isAvailable == true){
 					var originalCandidate = availableDrives[index].driveName;
 					//filter
-					var filteredCandidate = filter(originalCandidate, searchKeyword);
-					var emphasizedCandidate = filteredCandidate[0];
-					var eval = filteredCandidate[1];
+					//var filteredCandidate = filter(originalCandidate, searchKeyword);
+					//var emphasizedCandidate = filteredCandidate[0];
+					//var eval = filteredCandidate[1];
+					var eval = evaluate(originalCandidate, searchKeyword);
 					if(eval > 0 || searchKeyword.length == 0){
+						var emphasizedCandidate = emphasize(originalCandidate, searchKeyword);
 						//add to res
 						addComplementCandidateToRes(
 							currentDirectory, "drive", originalCandidate, 
@@ -232,22 +240,24 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 									//filter
 									let innerSearchKeyword = searchKeyword;
 
-									var filteredCandidate = filter(originalCandidate, innerSearchKeyword);
-									let emphasizedCandidate = filteredCandidate[0];
-									let eval = filteredCandidate[1];
-
+									//var filteredCandidate = filter(originalCandidate, innerSearchKeyword);
+									//let emphasizedCandidate = filteredCandidate[0];
+									//let eval = filteredCandidate[1];
+									let eval = evaluate(originalCandidate, innerSearchKeyword);
 									if(eval > 0){
 										//add to res
 										fs.stat(currentDirectory + originalCandidate, function(err, stats) {
 											if(err){
 												//do nothing
 											}else if (stats.isFile() == true) {
+												var emphasizedCandidate = emphasize(originalCandidate, innerSearchKeyword);
 												addComplementCandidateToRes(
 													currentDirectory, "file", originalCandidate,
 													innerSearchKeyword, emphasizedCandidate, res
 												);
 												complementProgressManager.addAddedComplementCandidateNum();
 											} else {
+												var emphasizedCandidate = emphasize(originalCandidate, innerSearchKeyword);
 												addComplementCandidateToRes(
 													currentDirectory, "folder", originalCandidate,
 													innerSearchKeyword, emphasizedCandidate, res
