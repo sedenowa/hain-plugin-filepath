@@ -155,6 +155,123 @@ function addComplementCandidateToRes
 	}
 }
 
+function complementDrives(availableDrives, searchKeyword, res){
+	//search available path to complement
+	//var foundCandidates = [];
+	var currentDirectory = "";
+	var len = availableDrives.length;
+	complementProgressManager.setComplementCandidateNum(len);
+
+	//listup available drives
+	for (var index = 0; index < len ; index++){
+		if(availableDrives[index].isAvailable == true){
+			var originalCandidate = availableDrives[index].driveName;
+			//filter
+			//var filteredCandidate = filter(originalCandidate, searchKeyword);
+			//var emphasizedCandidate = filteredCandidate[0];
+			//var eval = filteredCandidate[1];
+			var eval = evaluate(originalCandidate, searchKeyword);
+			if(eval > 0 || searchKeyword.length == 0){
+				var emphasizedCandidate = emphasize(originalCandidate, searchKeyword);
+				//add to res
+				addComplementCandidateToRes(
+					currentDirectory, "drive", originalCandidate,
+					searchKeyword, emphasizedCandidate, res
+				);
+				complementProgressManager.addAddedComplementCandidateNum();
+			}
+		}
+		complementProgressManager.addProgress();
+	}
+	checkProgress(res, currentDirectory);
+}
+function complementFileOrFolder(currentDirectory, searchKeyword, res) {
+	//check the status of currentpath async
+	fs.stat(currentDirectory, function(err, stats){
+		if(err){
+			//console.log("err");
+		}else if(stats.isDirectory()){
+			//when only currentPath is folder
+			//exec fs.readdir (get child folder/files)
+			fs.readdir(currentDirectory, function(err, list){
+				var len = list.length;
+				complementProgressManager.setComplementCandidateNum(len)
+				if(err){
+					//console.log("err");
+					checkProgress(res, currentDirectory);
+				}else{
+					if(searchKeyword.length == 0){
+						for(var index = 0; index < len ; index++) {
+							let originalCandidate = list[index];
+							//add to res
+							fs.stat(currentDirectory + originalCandidate, function(err, stats){
+								if(err){
+									//do nothing
+									//console.log("err");
+								}else if(stats.isFile() == true){
+									addComplementCandidateToRes(
+										currentDirectory, "file", originalCandidate,
+										"", originalCandidate, res
+									);
+									complementProgressManager.addAddedComplementCandidateNum();
+								}else{
+									addComplementCandidateToRes(
+										currentDirectory, "folder", originalCandidate,
+										"", originalCandidate, res
+									);
+									complementProgressManager.addAddedComplementCandidateNum();
+								}
+								complementProgressManager.addProgress();
+								checkProgress(res, currentDirectory);
+							});
+						}
+					}else{
+						for(var index = 0, len = list.length ; index < len ; index++) {
+							let originalCandidate = list[index];
+							//filter
+							let innerSearchKeyword = searchKeyword;
+
+							//var filteredCandidate = filter(originalCandidate, innerSearchKeyword);
+							//let emphasizedCandidate = filteredCandidate[0];
+							//let eval = filteredCandidate[1];
+							let eval = evaluate(originalCandidate, innerSearchKeyword);
+							if(eval > 0){
+								//add to res
+								fs.stat(currentDirectory + originalCandidate, function(err, stats) {
+									if(err){
+										//do nothing
+									}else if (stats.isFile() == true) {
+										var emphasizedCandidate = emphasize(originalCandidate, innerSearchKeyword);
+										addComplementCandidateToRes(
+											currentDirectory, "file", originalCandidate,
+											innerSearchKeyword, emphasizedCandidate, res
+										);
+										complementProgressManager.addAddedComplementCandidateNum();
+									} else {
+										var emphasizedCandidate = emphasize(originalCandidate, innerSearchKeyword);
+										addComplementCandidateToRes(
+											currentDirectory, "folder", originalCandidate,
+											innerSearchKeyword, emphasizedCandidate, res
+										);
+										complementProgressManager.addAddedComplementCandidateNum();
+									}
+									complementProgressManager.addProgress();
+									checkProgress(res, currentDirectory);
+								});
+							}else{
+								complementProgressManager.addProgress();
+								checkProgress(res, currentDirectory);
+							}
+						}
+					}
+				}
+			});
+		}else{
+			//console.log("else");
+		}
+	});
+}
+
 var searchCandidates = function(formattedQuery, availableDrives, res){
 	//reset
 	complementProgressManager.reset();
@@ -167,9 +284,9 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 	//check if the current directory is empty or not
 	//empty (suggest available drives)
 	if(currentDirectory == ""){
+		/*
 		//search available path to complement
 		//var foundCandidates = [];
-
 		var len = availableDrives.length;
 		complementProgressManager.setComplementCandidateNum(len);
 
@@ -195,8 +312,11 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 			complementProgressManager.addProgress();
 		}
 		checkProgress(res, currentDirectory);
+		*/
+		complementDrives(availableDrives, searchKeyword, res);
 	}else{//not empty (suggest available child folder/files)
 		//check the status of currentpath async
+		/*
 		fs.stat(currentDirectory, function(err, stats){
 			if(err){
 				//console.log("err");
@@ -280,6 +400,8 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 				//console.log("else");
 			}
 		});
+		*/
+		complementFileOrFolder(currentDirectory, searchKeyword, res);
 	}
 	//Search Available Drives again.
 	searchDriveUtil.searchAvailableDrivesAsync();
