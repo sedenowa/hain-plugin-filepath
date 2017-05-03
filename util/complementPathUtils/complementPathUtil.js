@@ -179,6 +179,62 @@ function complementDrives(availableDrives, searchKeyword, res){
 	}
 	checkProgress(res, currentDirectory);
 }
+function filterFileOrFolder(err, list, currentDirectory, searchKeyword, res){
+	var len = list.length;
+	complementProgressManager.setComplementCandidateNum(len)
+	if(err){
+		//console.log("err");
+		checkProgress(res, currentDirectory);
+	}else{
+		if(searchKeyword.length == 0){
+			for(var index = 0; index < len ; index++) {
+				let originalCandidate = list[index];
+				//add to res
+				fs.stat(currentDirectory + originalCandidate, function(err, stats){
+					if(err){
+						//console.log("err");
+						//do nothing
+					}else if(stats.isFile() == true){
+						complementProgressManager.addAddedComplementCandidateNum();
+						complementSortManager.add(currentDirectory, originalCandidate, 0, searchKeyword, "file");
+					}else{
+						complementProgressManager.addAddedComplementCandidateNum();
+						complementSortManager.add(currentDirectory, originalCandidate, 0, searchKeyword, "folder");
+					}
+					complementProgressManager.addProgress();
+					checkProgress(res, currentDirectory);
+				});
+			}
+		}else{
+			for(var index = 0, len = list.length ; index < len ; index++) {
+				let originalCandidate = list[index];
+				//filter
+				let innerSearchKeyword = searchKeyword;
+
+				let eval = evaluate(originalCandidate, innerSearchKeyword);
+				if(eval > 0){
+					//add to res
+					fs.stat(currentDirectory + originalCandidate, function(err, stats) {
+						if(err){
+							//do nothing
+						}else if (stats.isFile() == true) {
+							complementProgressManager.addAddedComplementCandidateNum();
+							complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword, "file");
+						} else {
+							complementProgressManager.addAddedComplementCandidateNum();
+							complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword, "folder");
+						}
+						complementProgressManager.addProgress();
+						checkProgress(res, currentDirectory);
+					});
+				}else{
+					complementProgressManager.addProgress();
+					checkProgress(res, currentDirectory);
+				}
+			}
+		}
+	}
+}
 function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 	//reset
 	complementProgressManager.reset();
@@ -192,60 +248,7 @@ function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 			//when only currentPath is folder
 			//exec fs.readdir (get child folder/files)
 			fs.readdir(currentDirectory, function(err, list){
-				var len = list.length;
-				complementProgressManager.setComplementCandidateNum(len)
-				if(err){
-					//console.log("err");
-					checkProgress(res, currentDirectory);
-				}else{
-					if(searchKeyword.length == 0){
-						for(var index = 0; index < len ; index++) {
-							let originalCandidate = list[index];
-							//add to res
-							fs.stat(currentDirectory + originalCandidate, function(err, stats){
-								if(err){
-									//console.log("err");
-									//do nothing
-								}else if(stats.isFile() == true){
-									complementProgressManager.addAddedComplementCandidateNum();
-									complementSortManager.add(currentDirectory, originalCandidate, 0, searchKeyword, "file");
-								}else{
-									complementProgressManager.addAddedComplementCandidateNum();
-									complementSortManager.add(currentDirectory, originalCandidate, 0, searchKeyword, "folder");
-								}
-								complementProgressManager.addProgress();
-								checkProgress(res, currentDirectory);
-							});
-						}
-					}else{
-						for(var index = 0, len = list.length ; index < len ; index++) {
-							let originalCandidate = list[index];
-							//filter
-							let innerSearchKeyword = searchKeyword;
-
-							let eval = evaluate(originalCandidate, innerSearchKeyword);
-							if(eval > 0){
-								//add to res
-								fs.stat(currentDirectory + originalCandidate, function(err, stats) {
-									if(err){
-										//do nothing
-									}else if (stats.isFile() == true) {
-										complementProgressManager.addAddedComplementCandidateNum();
-										complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword, "file");
-									} else {
-										complementProgressManager.addAddedComplementCandidateNum();
-										complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword, "folder");
-									}
-									complementProgressManager.addProgress();
-									checkProgress(res, currentDirectory);
-								});
-							}else{
-								complementProgressManager.addProgress();
-								checkProgress(res, currentDirectory);
-							}
-						}
-					}
-				}
+				filterFileOrFolder(err, list, currentDirectory, searchKeyword, res);
 			});
 		}else{
 			//console.log("else");
