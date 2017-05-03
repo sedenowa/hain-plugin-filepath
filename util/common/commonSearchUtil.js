@@ -83,4 +83,19 @@ function innerSeparatePath(targetPath, removeEmptyElementFlag){
 	}
 	return splittedPath;
 }
+
+function identifyFolderType(path){
+	if(path.indexOf(networkHeader) == 0){
+		return "server";
+	}else{
+		var folderName = path.slice().split(path.sep).pop();
+		if(folderName[0] >= 'A' && folderName[0] <= 'Z' && folderName[1] == ':'){
+			return "drive";
+		}else{
+			return "folder";
+		}
+	}
+}
+
 exports.separatePath = innerSeparatePath;
+exports.identifyFolderType = identifyFolderType;
