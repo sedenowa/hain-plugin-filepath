@@ -93,7 +93,8 @@ function innerRecursiveSearch(
 			if(currentPath != ""){
 				target = target + currentPath + "\\";
 			}
-			target = target + targetSearchCandidatesList[index];
+			let fileOrFolderName = targetSearchCandidatesList[index];
+			target = target + fileOrFolderName;
 			innerDifference = innerDifference + differencesList[index];
 			fs.stat(target, function(err, stats){
 				if(err){
@@ -105,8 +106,7 @@ function innerRecursiveSearch(
 						innerRecursiveSearch(path, searchedPathes, innerDifference, searchedDifferences, target,
 							shiftedSearchCandidatesLists, shiftedDifferencesLists, "file", res);
 					}else if(stats.isDirectory() == true){
-						//TODO: identify folder or fileserver or drive
-						var folderType = commonSearchUtil.identifyFolderType(path);
+						var folderType = commonSearchUtil.identifyFolderType(fileOrFolderName);
 						innerRecursiveSearch(path, searchedPathes, innerDifference, searchedDifferences, target,
 							shiftedSearchCandidatesLists, shiftedDifferencesLists, folderType, res);
 					}
@@ -127,11 +127,7 @@ function innerRecursiveSearch(
 			//add found path
 			searchSortManager.add(currentPath, state, difference);
 		}
-		//check progress
-		//checkProgress(path, res);
 	}
-	//check progress
-	//checkProgress(path, res);
 }
 
 // param : "A A A\B BB\C  C"
