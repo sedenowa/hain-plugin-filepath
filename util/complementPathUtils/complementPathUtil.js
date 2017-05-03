@@ -295,8 +295,8 @@ function checkProgress(res, currentDirectory){
 					payload: 'notfound',
 					redirect: commonUtil.commandHeader + " " + currentDirectory,
 					title: "No file/folder was not found.",
-					desc: "Back to parent folder.",
-					//group: "notfound"
+					desc: "Back to parent folder : " + currentDirectory,
+					group: "File/Folder Not Found"
 				}
 			);
 		}
