@@ -1,5 +1,5 @@
 var filteredCandidates = [];
-var addFilteredCandidates = function(currentDirectory, originalCandidate, eval, keyword, res){
+var addFilteredCandidates = function(currentDirectory, originalCandidate, eval, keyword){
 	if(originalCandidate != undefined && eval != undefined){
 		/*
 		res.add(

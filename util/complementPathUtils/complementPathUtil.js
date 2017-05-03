@@ -175,17 +175,10 @@ function complementDrives(availableDrives, searchKeyword, res){
 			//var eval = filteredCandidate[1];
 			var eval = evaluate(originalCandidate, searchKeyword);
 			if(eval > 0 || searchKeyword.length == 0){
-				var emphasizedCandidate = emphasize(originalCandidate, searchKeyword);
+				//var emphasizedCandidate = emphasize(originalCandidate, searchKeyword);
 				//add to res
-				/*
-				addComplementCandidateToRes(
-					currentDirectory, "drive", originalCandidate,
-					searchKeyword, emphasizedCandidate, res
-				);
-				*/
 				complementProgressManager.addAddedComplementCandidateNum();
-				//complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword);
-				complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword, res);
+				complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword);
 			}
 		}
 		complementProgressManager.addProgress();
@@ -299,42 +292,40 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 	searchDriveUtil.searchAvailableDrivesAsync();
 }
 
+function addNotFoundCommand(res, currentDirectory){
+	res.add(
+		{
+			id: commonUtil.commandHeader + " " + currentDirectory,
+			icon: "#fa fa-undo",
+			payload: 'notfound',
+			redirect: commonUtil.commandHeader + " " + currentDirectory,
+			title: "No file/folder was not found.",
+			desc: "Back to parent folder : " + currentDirectory,
+			group: "File/Folder Not Found"
+		}
+	);
+}
+function addSortedCandidates(res){
+	var sortedCandidates = complementSortManager.getSortedCandidates();
+	for (var index = 0, len = sortedCandidates.length; index < len; index++) {
+		var candidate = sortedCandidates[index];
+		var currentDirectory = candidate.currentDirectory;
+		var originalCandidate = candidate.originalCandidate;
+		var keyword = candidate.keyword;
+		//TODO: select drive or file or folder
+		addComplementCandidateToRes(
+			currentDirectory, "drive", originalCandidate,
+			keyword, emphasize(originalCandidate, keyword), res
+		);
+	}
+}
+
 function checkProgress(res, currentDirectory){
 	if(searchProgressManager.isSearchCompleted() == true && complementProgressManager.isComplementCompleted() == true){
-		//
-		var sortedCandidates = complementSortManager.getSortedCandidates();
-		/*
-		res.add(
-			{
-				id: "",
-				payload: 'pending',
-				title: sortedCandidates.length,
-				desc: "debug"
-			}
-		);
-		*/
-		for(var index = 0, len = sortedCandidates.length; index < len; index++){
-			var candidate = sortedCandidates[index];
-			var originalCandidate = candidate.originalCandidate;
-			var keyword = candidate.keyword;
-			//TODO: select drive or file or folder
-			addComplementCandidateToRes(
-				currentDirectory, "drive", originalCandidate,
-				keyword, emphasize(originalCandidate, keyword), res
-			);
-		}
 		if(searchProgressManager.isPathAdded() == false && complementProgressManager.isComplementAdded() == false){
-			res.add(
-				{
-					id: commonUtil.commandHeader + " " + currentDirectory,
-					icon: "#fa fa-undo",
-					payload: 'notfound',
-					redirect: commonUtil.commandHeader + " " + currentDirectory,
-					title: "No file/folder was not found.",
-					desc: "Back to parent folder : " + currentDirectory,
-					group: "File/Folder Not Found"
-				}
-			);
+			addNotFoundCommand(res, currentDirectory);
+		}else{
+			addSortedCandidates(res);
 		}
 	}
 }
