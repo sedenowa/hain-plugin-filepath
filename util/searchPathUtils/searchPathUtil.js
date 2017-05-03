@@ -31,37 +31,45 @@ function checkPositionOfSpaces(targetString){
 // param : [], "A A A"
 // return:
 // process: [] <- ["A A A","AA A","A AA","AAA"]
-function innerRecursiveListUp(list, string){
-	if(list.indexOf(string) < 0){
-		list.push(string);
+function innerRecursiveListUp(candidateList, differenceList, string, difference){
+	if(candidateList.indexOf(string) < 0){
+		candidateList.push(string);
+		differenceList.push(difference);
 	}
 	var positionOfSpaces = checkPositionOfSpaces(string);
 	for(var index = 0, len = positionOfSpaces.length; index < len; index++){
 		var stringRemovedOneSpace = commonUtil.removeCharacterWithPosition(string, positionOfSpaces[index]);
-		innerRecursiveListUp(list, stringRemovedOneSpace);
+		innerRecursiveListUp(candidateList, differenceList, stringRemovedOneSpace, difference + 1);
 	}
 }
 
 // param : "A A A"
-// return: ["A A A","AA A","A AA","AAA"]
-function listupSearchCandidates(string){
-	var list = [];
-	innerRecursiveListUp(list, string);
-	return list;
+// return: [["A A A","AA A","A AA","AAA"], [0, 1, 1, 2]]
+function listupSearchCandidatesAndDifferences(string){
+	var searchCandidateList = [], differenceList = [];
+	innerRecursiveListUp(searchCandidateList, differenceList, string, 0);
+	return [searchCandidateList, differenceList];
 }
 
 //inner function
 // param : "A A A\B BB\C  C"
-// return: [["A A A","AA A","A AA","AAA"],
-//          ["B BB","BBB"],
-//          ["C  C","C C","CC"]]
-function listupAllLayerSearchCandidates(path){
-	var listAllLayer = [];
+// return: [[["A A A","AA A","A AA","AAA"],
+//           ["B BB","BBB"],
+//           ["C  C","C C","CC"]],
+//          [[0, 1, 1, 2],
+//           [0, 1],
+//           [0, 1, 2]]]
+function listupSearchCandidatesAndDifferencesAllLayer(path){
+	var candidateListsOfAllLayer = [], differenceListsOfAllLayer = [];
 	var separatedPath = commonSearchUtil.separatePath(path, true);
 	for(var index = 0, len = separatedPath.length; index < len; index++){
-		listAllLayer.push(listupSearchCandidates(separatedPath[index]));
+		var candidateAndDistanceLists = listupSearchCandidatesAndDifferences(separatedPath[index]);
+		var candidateList = candidateAndDistanceLists[0];
+		candidateListsOfAllLayer.push(candidateList);
+		var differenceList = candidateAndDistanceLists[1];
+		differenceListsOfAllLayer.push(differenceList);
 	}
-	return listAllLayer;
+	return [candidateListsOfAllLayer, differenceListsOfAllLayer];
 }
 
 //add to res
@@ -139,12 +147,12 @@ function addOpenCommand(targetPath, state, res){
 //inner function for recursive search
 //add to res in this function
 //TODO: calc difference
-function innerRecursiveSearch(path, searchedPathes, currentPath, listRemainingLayer, state, res){
+function innerRecursiveSearch(path, searchedPathes, currentPath, searchCandidatesListsOfRemainingLayer, state, res){
 	//main process
-	var len = listRemainingLayer.length;
+	var len = searchCandidatesListsOfRemainingLayer.length;
 	if(len > 0){
-		var list = listRemainingLayer[0];
-		let copy = listRemainingLayer.slice();
+		var list = searchCandidatesListsOfRemainingLayer[0];
+		let copy = searchCandidatesListsOfRemainingLayer.slice();
 		copy.shift();
 		for(var index = 0, len2 = list.length; index < len2; index++){
 			let target = "";
@@ -194,12 +202,15 @@ var searchAvailablePathAsync = function(path, res){
 	}
 
 	//listup all layer
-	var listAllLayer = listupAllLayerSearchCandidates(path);
+	var candidatesAndDistancesListsOfAllLayer = listupSearchCandidatesAndDifferencesAllLayer(path);
+	//var searchCandidatesListOfAllLayer = listupSearchCandidatesAndDifferencesAllLayer(path);
+	var searchCandidatesListOfAllLayer = candidatesAndDistancesListsOfAllLayer[0];
+	var distancesListOfAllLayer = candidatesAndDistancesListsOfAllLayer[1];
 
 	//reset max pattern of progress
 	progressManager.reset();
 	//set max pattern of progress
-	progressManager.setPatternMax(listAllLayer);
+	progressManager.setPatternMax(searchCandidatesListOfAllLayer);
 	//reset flag to execute complement
 	resetIsComplementOfPathStarted();
 
@@ -209,7 +220,7 @@ var searchAvailablePathAsync = function(path, res){
 	//search
 	if(path.length > 0) {
 		//search
-		innerRecursiveSearch(path, foundPathes, "", listAllLayer, "",res);
+		innerRecursiveSearch(path, foundPathes, "", searchCandidatesListOfAllLayer, "", res);
 	}else{
 		//check progress
 		checkProgress(path, res);
