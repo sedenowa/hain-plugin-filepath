@@ -3,11 +3,11 @@ const fs = require('fs');
 //to format filepath
 const path = require('path');
 
-var commonUtil = require("./common/commonUtil");
-var commonSearchUtil = require("./common/commonSearchUtil");
+var commonUtil = require("../common/commonUtil");
+var commonSearchUtil = require("../common/commonSearchUtil");
 var searchDriveUtil = require("./searchDriveUtil");
-var searchProgressManager = require("./common/searchProgressManager");
-var complementProgressManager = require("./common/complementProgressManager");
+var searchProgressManager = require("../searchPathUtils/searchProgressManager");
+var complementProgressManager = require("./complementProgressManager");
 
 var searchCandidates = function(formattedQuery, availableDrives, res){
 	//param: "C:\AAA\BBB"
@@ -286,18 +286,16 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 }
 
 function checkProgress(res, currentDirectory){
-	if(searchProgressManager.isSearchCompleted() == true &&
-		complementProgressManager.isComplementCompleted() == true){
-		if(searchProgressManager.isPathAdded() == false &&
-			complementProgressManager.isComplementAdded() == false){
+	if(searchProgressManager.isSearchCompleted() == true && complementProgressManager.isComplementCompleted() == true){
+		if(searchProgressManager.isPathAdded() == false && complementProgressManager.isComplementAdded() == false){
 			res.add(
 				{
 					id: commonUtil.commandHeader + " " + currentDirectory,
-					icon: "#fa undo",
+					icon: "#fa fa-undo",
 					payload: 'notfound',
 					redirect: commonUtil.commandHeader + " " + currentDirectory,
-					title: "Not Found",
-					desc: "No file/folder was not found.",
+					title: "No file/folder was not found.",
+					desc: "Back to parent folder.",
 					//group: "notfound"
 				}
 			);

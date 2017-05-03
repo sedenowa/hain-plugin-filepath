@@ -4,13 +4,13 @@ const fs = require('fs');
 const path = require('path');
 
 //load private Utils
-var commonUtil = require("./common/commonUtil");
-var commonSearchUtil = require("./common/commonSearchUtil");
-var searchDriveUtil = require("./searchDriveUtil");
-var complementPathUtil = require("./complementPathUtil");
+var commonUtil = require("../common/commonUtil");
+var commonSearchUtil = require("../common/commonSearchUtil");
+var searchDriveUtil = require("../complementPathUtils/searchDriveUtil");
+var complementPathUtil = require("../complementPathUtils/complementPathUtil");
 
 //to manage progress
-var progressManager = require('./common/searchProgressManager');
+var progressManager = require('./searchProgressManager');
 
 // param : "A A A\B BB\C  C"
 // return ["AAA\BBB\CC","AAA\B BB\C C"] <- available pathes removed unnecessary spaces
