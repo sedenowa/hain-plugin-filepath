@@ -10,7 +10,9 @@ var searchDriveUtil = require("../complementPathUtils/searchDriveUtil");
 var complementPathUtil = require("../complementPathUtils/complementPathUtil");
 
 //to manage progress
-var progressManager = require('./searchProgressManager');
+var progressManager = require("./searchProgressManager");
+//to manage sorting
+var searchSortManager = require("./searchSortManager");
 
 
 // param : "a bc  "
@@ -63,7 +65,7 @@ function listupAllLayerSearchCandidates(path){
 }
 
 //add to res
-function innerAddOpenCommand(targetPath, res){
+function addOpenCommand(targetPath, res){
 	//add to res.
 	//Check state of formatted path (File or Folder or not).
 	//and set Description Message according to the state.
@@ -172,10 +174,12 @@ function innerRecursiveSearch(path, searchedPathes, currentPath, listRemainingLa
 		if(searchedPathes.indexOf(currentPath) < 0){
 			searchedPathes.push(currentPath);
 			//callback(currentPath, res);
-			innerAddOpenCommand(currentPath, res);
+			//addOpenCommand(currentPath, res);
 			//add progress
 			progressManager.addProgressByNum(1);
 			progressManager.addFoundPathNum();
+			//add found path
+			searchSortManager.add(currentPath, "file", 0);
 		}
 		//check progress
 		//checkProgress(path, res);
@@ -202,6 +206,9 @@ var searchAvailablePathAsync = function(path, res){
 	//reset flag to execute complement
 	resetIsComplementOfPathStarted();
 
+	//reset sort manager
+	searchSortManager.reset();
+
 	//search
 	if(path.length > 0) {
 		//search
@@ -217,6 +224,29 @@ function resetIsComplementOfPathStarted(){
 	isComplementOfPathStarted = false;
 }
 
+function addFoundPathesOfEachState(res, state, sortedFoundPathes){
+	var len = sortedFoundPathes.length;
+	for (var index = 0; index < len; index++) {
+		var foundPath = sortedFoundPathes[index];
+		var innerState = foundPath.state;
+		if(innerState == state){
+			var path = foundPath.path;
+			var difference = foundPath.difference;
+			//add to res
+			addOpenCommand(path, res);
+		}
+	}
+}
+function addSortedFoundPathes(res){
+	var sortedFoundPathes = searchSortManager.getSortedFoundPathes();
+	//add drives
+	addFoundPathesOfEachState(res, "drive", sortedFoundPathes);
+	//add folders
+	addFoundPathesOfEachState(res, "folder", sortedFoundPathes);
+	//add files
+	addFoundPathesOfEachState(res, "file", sortedFoundPathes);
+}
+
 //execute complement of path
 function executeComplementOfPath(formattedQuery, res){
 	//TODO:execute complement of path
@@ -227,6 +257,9 @@ function executeComplementOfPath(formattedQuery, res){
 //if completed, execute complement process
 function checkProgress(path, res){
 	if(progressManager.isSearchCompleted() == true){
+		//add open command
+		addSortedFoundPathes(res);
+
 		if(isComplementOfPathStarted == false){
 			executeComplementOfPath(path, res);
 			isComplementOfPathStarted = true;
