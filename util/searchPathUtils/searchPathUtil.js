@@ -74,9 +74,10 @@ function listupSearchCandidatesAndDifferencesAllLayer(path){
 
 //inner function for recursive search
 //add to res in this function
-function innerRecursiveSearch
-(path, searchedPathes, difference, searchedDifferences, currentPath,
-searchCandidatesListsOfRemainingLayer, differencesListsOfRemainingLayer, state, res){
+function innerRecursiveSearch(
+	path, searchedPathes, difference, searchedDifferences, currentPath,
+	searchCandidatesListsOfRemainingLayer, differencesListsOfRemainingLayer, state, res
+){
 	//main process
 	var lengthOfRemainingLayer = searchCandidatesListsOfRemainingLayer.length;
 	if(lengthOfRemainingLayer > 0){
