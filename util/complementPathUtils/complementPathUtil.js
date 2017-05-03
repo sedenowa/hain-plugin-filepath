@@ -39,58 +39,58 @@ function extractKeywords(formattedQuery){
 
 //ex tags: ["<b>","</b>"]
 //param : "ABCDE", ["AB","D"]
-function evaluate(target, keyword){
+function evaluate(originalCandidate, keyword){
 	var eval = 0;
-	var innerTarget = target;
+	var innerOriginalCandidate = originalCandidate;
 	for(var indexOfKeyword = 0, lengthOfKeyword = keyword.length ; indexOfKeyword < lengthOfKeyword ; indexOfKeyword++){
-		var foundPos = innerTarget.toLocaleLowerCase().indexOf(keyword[indexOfKeyword].toLocaleLowerCase());
+		var foundPos = innerOriginalCandidate.toLocaleLowerCase().indexOf(keyword[indexOfKeyword].toLocaleLowerCase());
 		if(foundPos == -1){
 			eval = eval - 1;
 		}else{
 			eval = eval + 1;
-			innerTarget = innerTarget.substring(foundPos + 1);
+			innerOriginalCandidate = innerOriginalCandidate.substring(foundPos + 1);
 		}
 	}
 	return eval;
 }
-function emphasize(target, keyword){
+function emphasize(originalCandidate, keyword){
 	var tag = ["<b>","</b>"];
 	var empFlag = false;
 	//var eval = 0;
-	var ret = "";
-	var innerTarget = target;
+	var emphasizedCandidate = "";
+	var innerOriginalCandidate = originalCandidate;
 	for(var indexOfKeyword = 0, lengthOfKeyword = keyword.length ; indexOfKeyword < lengthOfKeyword ; indexOfKeyword++){
-		var foundPos = innerTarget.toLocaleLowerCase().indexOf(keyword[indexOfKeyword].toLocaleLowerCase());
+		var foundPos = innerOriginalCandidate.toLocaleLowerCase().indexOf(keyword[indexOfKeyword].toLocaleLowerCase());
 		if(foundPos == -1){
 			//eval = eval - 1;
 			if(indexOfKeyword == lengthOfKeyword - 1){
 				if(empFlag == true){
-					ret = ret + tag[1];
+					emphasizedCandidate = emphasizedCandidate + tag[1];
 				}
-				ret = ret + innerTarget;
+				emphasizedCandidate = emphasizedCandidate + innerOriginalCandidate;
 			}
 		}else{
 			//eval = eval + 1;
 			if(empFlag == false){
-				ret = ret + innerTarget.substring(0, foundPos);
-				ret = ret + tag[0];
-				ret = ret + innerTarget[foundPos];
-				innerTarget = innerTarget.substring(foundPos + 1);
+				emphasizedCandidate = emphasizedCandidate + innerOriginalCandidate.substring(0, foundPos);
+				emphasizedCandidate = emphasizedCandidate + tag[0];
+				emphasizedCandidate = emphasizedCandidate + innerOriginalCandidate[foundPos];
+				innerOriginalCandidate = innerOriginalCandidate.substring(foundPos + 1);
 				empFlag = true;
 			}else{
-				if(foundPos > 0){ ret = ret + tag[1]; }
-				ret = ret + innerTarget.substring(0, foundPos);
-				if(foundPos > 0){ ret = ret + tag[0]; }
-				ret = ret + innerTarget[foundPos];
-				innerTarget = innerTarget.substring(foundPos + 1);
+				if(foundPos > 0){ emphasizedCandidate = emphasizedCandidate + tag[1]; }
+				emphasizedCandidate = emphasizedCandidate + innerOriginalCandidate.substring(0, foundPos);
+				if(foundPos > 0){ emphasizedCandidate = emphasizedCandidate + tag[0]; }
+				emphasizedCandidate = emphasizedCandidate + innerOriginalCandidate[foundPos];
+				innerOriginalCandidate = innerOriginalCandidate.substring(foundPos + 1);
 			}
 			if(empFlag == true && indexOfKeyword == lengthOfKeyword - 1){
-				ret = ret + tag[1];
-				ret = ret + innerTarget;
+				emphasizedCandidate = emphasizedCandidate + tag[1];
+				emphasizedCandidate = emphasizedCandidate + innerOriginalCandidate;
 			}
 		}
 	}
-	return ret;
+	return emphasizedCandidate;
 }
 
 function addComplementCandidateToRes
@@ -156,6 +156,9 @@ function addComplementCandidateToRes
 }
 
 function complementDrives(availableDrives, searchKeyword, res){
+	//reset
+	complementProgressManager.reset();
+	complementSortManager.reset();
 	//search available path to complement
 	//var foundCandidates = [];
 	var currentDirectory = "";
@@ -174,11 +177,15 @@ function complementDrives(availableDrives, searchKeyword, res){
 			if(eval > 0 || searchKeyword.length == 0){
 				var emphasizedCandidate = emphasize(originalCandidate, searchKeyword);
 				//add to res
+				/*
 				addComplementCandidateToRes(
 					currentDirectory, "drive", originalCandidate,
 					searchKeyword, emphasizedCandidate, res
 				);
+				*/
 				complementProgressManager.addAddedComplementCandidateNum();
+				//complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword);
+				complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword, res);
 			}
 		}
 		complementProgressManager.addProgress();
@@ -186,6 +193,9 @@ function complementDrives(availableDrives, searchKeyword, res){
 	checkProgress(res, currentDirectory);
 }
 function complementFileOrFolder(currentDirectory, searchKeyword, res) {
+	//reset
+	complementProgressManager.reset();
+	complementSortManager.reset();
 	//check the status of currentpath async
 	fs.stat(currentDirectory, function(err, stats){
 		if(err){
@@ -273,9 +283,6 @@ function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 }
 
 var searchCandidates = function(formattedQuery, availableDrives, res){
-	//reset
-	complementProgressManager.reset();
-	complementSortManager.reset();
 
 	var keywords = extractKeywords(formattedQuery);
 	var currentDirectory = keywords[0];
@@ -294,6 +301,28 @@ var searchCandidates = function(formattedQuery, availableDrives, res){
 
 function checkProgress(res, currentDirectory){
 	if(searchProgressManager.isSearchCompleted() == true && complementProgressManager.isComplementCompleted() == true){
+		//
+		var sortedCandidates = complementSortManager.getSortedCandidates();
+		/*
+		res.add(
+			{
+				id: "",
+				payload: 'pending',
+				title: sortedCandidates.length,
+				desc: "debug"
+			}
+		);
+		*/
+		for(var index = 0, len = sortedCandidates.length; index < len; index++){
+			var candidate = sortedCandidates[index];
+			var originalCandidate = candidate.originalCandidate;
+			var keyword = candidate.keyword;
+			//TODO: select drive or file or folder
+			addComplementCandidateToRes(
+				currentDirectory, "drive", originalCandidate,
+				keyword, emphasize(originalCandidate, keyword), res
+			);
+		}
 		if(searchProgressManager.isPathAdded() == false && complementProgressManager.isComplementAdded() == false){
 			res.add(
 				{

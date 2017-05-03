@@ -1,23 +1,44 @@
 var filteredCandidates = [];
-var addFilteredCandidates = function(currentDirectory, originalCandidate, eval, keyword){
-	if(currentDirectory && originalCandidate && eval && keyword){
-		for(var index = 0, len = filteredCandidates.length; index < len; index++){
-			var savedOriginalCandidate = filteredCandidates[index].originalCandidate;
-			var savedEval = filteredCandidates[index].eval;
-			if(savedOriginalCandidate == originalCandidate && savedEval == eval){
-				//do nothing
-			}else{
-				//add
-				filteredCandidates.push(
-					{
-						currentDirectory: currentDirectory,
-						originalCandidate: originalCandidate,
-						eval: eval,
-						keyword: keyword
-					}
-				);
+var addFilteredCandidates = function(currentDirectory, originalCandidate, eval, keyword, res){
+	if(originalCandidate != undefined && eval != undefined){
+		/*
+		res.add(
+			{
+				id: "",
+				payload: 'pending',
+				title: currentDirectory,
+				desc: originalCandidate
+			}
+		);
+		res.add(
+			{
+				id: "",
+				payload: 'pending',
+				title: eval,
+				desc: keyword
+			}
+		);
+		*/
+		var len = filteredCandidates.length;
+		if(len > 0){
+			for(var index = 0; index < len; index++){
+				var savedOriginalCandidate = filteredCandidates[index].originalCandidate;
+				var savedEval = filteredCandidates[index].eval;
+				if(savedOriginalCandidate == originalCandidate && savedEval == eval){
+					//do nothing
+					return;
+				}
 			}
 		}
+		//add
+		filteredCandidates.push(
+			{
+				currentDirectory: currentDirectory,
+				originalCandidate: originalCandidate,
+				eval: eval,
+				keyword: keyword
+			}
+		);
 	}
 }
 var resetFilteredCandidates = function(){
@@ -44,9 +65,9 @@ var sortCandidatesByEval = function(list){
 			return 1;
 		}else{
 			if(a.originalCandidate > b.originalCandidate){
-				return -1;
-			}else if(a.originalCandidate < b.originalCandidate) {
 				return 1;
+			}else if(a.originalCandidate < b.originalCandidate) {
+				return -1;
 			}else{
 				return 0;
 			}
