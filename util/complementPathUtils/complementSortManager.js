@@ -1,5 +1,5 @@
 var filteredCandidates = [];
-var addFilteredCandidates = function(currentDirectory, originalCandidate, eval, keyword, state){
+var addFilteredCandidate = function(currentDirectory, originalCandidate, eval, keyword, state){
 	if(originalCandidate != undefined && eval != undefined){
 		var len = filteredCandidates.length;
 		if(len > 0){
@@ -69,7 +69,7 @@ var getSortedCandidates = function(){
 	return sortedCandidates;
 }
 
-exports.add = addFilteredCandidates;
+exports.add = addFilteredCandidate;
 exports.reset = resetFilteredCandidates;
 exports.hasFilteredCandidate = hasFilteredCandidate;
 exports.getSortedCandidates = getSortedCandidates;
