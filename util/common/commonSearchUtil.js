@@ -56,7 +56,7 @@ function checkFileServerRootFormat(path){
 	return false;
 }
 
-function innerSeparatePath(targetPath, removeEmptyElementFlag){
+function separatePath(targetPath, removeEmptyElementFlag){
 	//split path
 	//check if the path is file server.
 	//if the path is file server, remove "\\" attached on head.
@@ -85,7 +85,7 @@ function innerSeparatePath(targetPath, removeEmptyElementFlag){
 }
 
 function identifyFolderType(path){
-	if(path.indexOf(networkHeader) == 0){
+	if(checkFileServer(path) == true){
 		return "server";
 	}else{
 		var folderName = path.slice().split(path.sep).pop();
@@ -97,5 +97,5 @@ function identifyFolderType(path){
 	}
 }
 
-exports.separatePath = innerSeparatePath;
+exports.separatePath = separatePath;
 exports.identifyFolderType = identifyFolderType;

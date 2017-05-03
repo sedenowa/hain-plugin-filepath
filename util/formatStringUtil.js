@@ -38,10 +38,25 @@ exports.formatString = function(string){
 		removeCharacters(trimmedString,['*','/','?',"\"","<",">","|","\t"]);
 
 	//normalize
-		var normalizedQuery = path.normalize(stringRemovedUnavailableCharacters);
-		if(normalizedQuery == "."){
-			normalizedQuery = "";
+	//var normalizedQuery = path.normalize(stringRemovedUnavailableCharacters);
+	var normalizedQuery = path.normalize(stringRemovedUnavailableCharacters);
+	if(stringRemovedUnavailableCharacters.indexOf("\\\\") == 0) {
+		if(normalizedQuery.indexOf("\\\\") != 0){
+			normalizedQuery = "\\" + normalizedQuery;
 		}
+	}
+
+	if(normalizedQuery == "."){
+		normalizedQuery = "";
+	}else if(normalizedQuery == "\\" || normalizedQuery == "\\\\"){
+		normalizedQuery = "";
+	}
+
+	if(normalizedQuery[0] >= 'A' && normalizedQuery[0] <= 'Z' && normalizedQuery[1] >= ':'){
+		if(normalizedQuery[2] == "."){
+			normalizedQuery = normalizedQuery.slice().substring(0, 2) + normalizedQuery.slice().substring(3);
+		}
+	}
 	
 	return normalizedQuery;
 }
