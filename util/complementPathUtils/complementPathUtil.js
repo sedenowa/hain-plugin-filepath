@@ -160,7 +160,6 @@ function complementDrives(availableDrives, searchKeyword, res){
 	complementProgressManager.reset();
 	complementSortManager.reset();
 	//search available path to complement
-	//var foundCandidates = [];
 	var currentDirectory = "";
 	var len = availableDrives.length;
 	complementProgressManager.setComplementCandidateNum(len);
@@ -169,13 +168,8 @@ function complementDrives(availableDrives, searchKeyword, res){
 	for (var index = 0; index < len ; index++){
 		if(availableDrives[index].isAvailable == true){
 			var originalCandidate = availableDrives[index].driveName;
-			//filter
-			//var filteredCandidate = filter(originalCandidate, searchKeyword);
-			//var emphasizedCandidate = filteredCandidate[0];
-			//var eval = filteredCandidate[1];
 			var eval = evaluate(originalCandidate, searchKeyword);
 			if(eval > 0 || searchKeyword.length == 0){
-				//var emphasizedCandidate = emphasize(originalCandidate, searchKeyword);
 				//add to res
 				complementProgressManager.addAddedComplementCandidateNum();
 				complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword);
@@ -189,6 +183,7 @@ function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 	//reset
 	complementProgressManager.reset();
 	complementSortManager.reset();
+
 	//check the status of currentpath async
 	fs.stat(currentDirectory, function(err, stats){
 		if(err){
@@ -212,17 +207,23 @@ function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 									//do nothing
 									//console.log("err");
 								}else if(stats.isFile() == true){
+									/*
 									addComplementCandidateToRes(
 										currentDirectory, "file", originalCandidate,
 										"", originalCandidate, res
 									);
+									*/
 									complementProgressManager.addAddedComplementCandidateNum();
+									complementSortManager.add(currentDirectory, originalCandidate, 0, searchKeyword);
 								}else{
+									/*
 									addComplementCandidateToRes(
 										currentDirectory, "folder", originalCandidate,
 										"", originalCandidate, res
 									);
+									*/
 									complementProgressManager.addAddedComplementCandidateNum();
+									complementSortManager.add(currentDirectory, originalCandidate, 0, searchKeyword);
 								}
 								complementProgressManager.addProgress();
 								checkProgress(res, currentDirectory);
@@ -244,19 +245,25 @@ function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 									if(err){
 										//do nothing
 									}else if (stats.isFile() == true) {
+										/*
 										var emphasizedCandidate = emphasize(originalCandidate, innerSearchKeyword);
 										addComplementCandidateToRes(
 											currentDirectory, "file", originalCandidate,
 											innerSearchKeyword, emphasizedCandidate, res
 										);
+										*/
 										complementProgressManager.addAddedComplementCandidateNum();
+										complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword);
 									} else {
+										/*
 										var emphasizedCandidate = emphasize(originalCandidate, innerSearchKeyword);
 										addComplementCandidateToRes(
 											currentDirectory, "folder", originalCandidate,
 											innerSearchKeyword, emphasizedCandidate, res
 										);
+										*/
 										complementProgressManager.addAddedComplementCandidateNum();
+										complementSortManager.add(currentDirectory, originalCandidate, eval, searchKeyword);
 									}
 									complementProgressManager.addProgress();
 									checkProgress(res, currentDirectory);

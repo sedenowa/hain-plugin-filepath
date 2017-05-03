@@ -1,24 +1,6 @@
 var filteredCandidates = [];
 var addFilteredCandidates = function(currentDirectory, originalCandidate, eval, keyword){
 	if(originalCandidate != undefined && eval != undefined){
-		/*
-		res.add(
-			{
-				id: "",
-				payload: 'pending',
-				title: currentDirectory,
-				desc: originalCandidate
-			}
-		);
-		res.add(
-			{
-				id: "",
-				payload: 'pending',
-				title: eval,
-				desc: keyword
-			}
-		);
-		*/
 		var len = filteredCandidates.length;
 		if(len > 0){
 			for(var index = 0; index < len; index++){
