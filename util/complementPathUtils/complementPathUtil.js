@@ -283,19 +283,30 @@ function addNotFoundCommand(res, currentDirectory){
 		}
 	);
 }
+function addCandidatesOfEachState(res, state, sortedCandidates){
+	var len = sortedCandidates.length;
+	for (var index = 0; index < len; index++) {
+		var candidate = sortedCandidates[index];
+		var innerState = candidate.state;
+		if(innerState == state){
+			var currentDirectory = candidate.currentDirectory;
+			var originalCandidate = candidate.originalCandidate;
+			var keyword = candidate.keyword;
+			addComplementCandidateToRes(
+				currentDirectory, innerState, originalCandidate,
+				keyword, emphasize(originalCandidate, keyword), res
+			);
+		}
+	}
+}
 function addSortedCandidates(res){
 	var sortedCandidates = complementSortManager.getSortedCandidates();
-	for (var index = 0, len = sortedCandidates.length; index < len; index++) {
-		var candidate = sortedCandidates[index];
-		var currentDirectory = candidate.currentDirectory;
-		var originalCandidate = candidate.originalCandidate;
-		var keyword = candidate.keyword;
-		var state = candidate.state;
-		addComplementCandidateToRes(
-			currentDirectory, state, originalCandidate,
-			keyword, emphasize(originalCandidate, keyword), res
-		);
-	}
+	//add drives
+	addCandidatesOfEachState(res, "drive", sortedCandidates);
+	//add folders
+	addCandidatesOfEachState(res, "folder", sortedCandidates);
+	//add files
+	addCandidatesOfEachState(res, "file", sortedCandidates);
 }
 
 function checkProgress(res, currentDirectory){
