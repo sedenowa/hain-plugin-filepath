@@ -8,9 +8,9 @@ module.exports = (pluginContext) => {
 	
 	//Utils
 	var formatStringUtil = require("./util/formatStringUtil");
-	var searchPathUtil = require("./util/searchPathUtil");
-	var searchDriveUtil = require("./util/searchDriveUtil");
-	var complementPathUtil = require("./util/complementPathUtil");
+	var searchPathUtil = require("./util/searchPathUtils/searchPathUtil");
+	var searchDriveUtil = require("./util/complementPathUtils/searchDriveUtil");
+	var complementPathUtil = require("./util/complementPathUtils/complementPathUtil");
 	
 	function startup(){
 		//Search Available Drives.
