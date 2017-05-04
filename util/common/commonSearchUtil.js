@@ -56,7 +56,7 @@ function checkFileServerRootFormat(path){
 	return false;
 }
 
-function innerSeparatePath(targetPath, removeEmptyElementFlag){
+function separatePath(targetPath, removeEmptyElementFlag){
 	//split path
 	//check if the path is file server.
 	//if the path is file server, remove "\\" attached on head.
@@ -83,4 +83,19 @@ function innerSeparatePath(targetPath, removeEmptyElementFlag){
 	}
 	return splittedPath;
 }
-exports.separatePath = innerSeparatePath;
+
+function identifyFolderType(path){
+	if(checkFileServer(path) == true){
+		return "server";
+	}else{
+		var folderName = path.slice().split(path.sep).pop();
+		if(folderName[0] >= 'A' && folderName[0] <= 'Z' && folderName[1] == ':'){
+			return "drive";
+		}else{
+			return "folder";
+		}
+	}
+}
+
+exports.separatePath = separatePath;
+exports.identifyFolderType = identifyFolderType;

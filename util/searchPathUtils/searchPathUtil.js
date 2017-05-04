@@ -93,7 +93,8 @@ function innerRecursiveSearch(
 			if(currentPath != ""){
 				target = target + currentPath + "\\";
 			}
-			target = target + targetSearchCandidatesList[index];
+			let fileOrFolderName = targetSearchCandidatesList[index];
+			target = target + fileOrFolderName;
 			innerDifference = innerDifference + differencesList[index];
 			fs.stat(target, function(err, stats){
 				if(err){
@@ -105,9 +106,9 @@ function innerRecursiveSearch(
 						innerRecursiveSearch(path, searchedPathes, innerDifference, searchedDifferences, target,
 							shiftedSearchCandidatesLists, shiftedDifferencesLists, "file", res);
 					}else if(stats.isDirectory() == true){
-						//TODO: identify folder or fileserver or drive
+						var folderType = commonSearchUtil.identifyFolderType(fileOrFolderName);
 						innerRecursiveSearch(path, searchedPathes, innerDifference, searchedDifferences, target,
-							shiftedSearchCandidatesLists, shiftedDifferencesLists, "folder", res);
+							shiftedSearchCandidatesLists, shiftedDifferencesLists, folderType, res);
 					}
 				}
 				//check progress
@@ -126,11 +127,7 @@ function innerRecursiveSearch(
 			//add found path
 			searchSortManager.add(currentPath, state, difference);
 		}
-		//check progress
-		//checkProgress(path, res);
 	}
-	//check progress
-	//checkProgress(path, res);
 }
 
 // param : "A A A\B BB\C  C"
@@ -202,14 +199,22 @@ function addOpenCommand(targetPath, difference, state, res){
 			innerGroup = "Available Pathes : Folder";
 			innerRedirect = commonUtil.commandHeader + " " + targetPath + "\\";
 			break;
-		case "drive"://file server
+		case "drive"://drive
 			addToResFlag = true;
 			//extract folder name
 			var foldername = targetPath.slice().split(path.sep).pop();
 			descriptionMessage = "Open this Drive : \"" + foldername + "\"";
-			//innerIcon = "#fa fa-folder-open-o";
-			innerIcon = "#fa fa-server";
+			innerIcon = "#fa fa-hdd-o";
 			innerGroup = "Available Pathes : Drive";
+			innerRedirect = commonUtil.commandHeader + " " + targetPath + "\\";
+			break;
+		case "server"://server
+			addToResFlag = true;
+			//extract folder name
+			var foldername = targetPath.slice().split(path.sep).pop();
+			descriptionMessage = "Open this File Server : \"" + foldername + "\"";
+			innerIcon = "#fa fa-server";
+			innerGroup = "Available Pathes : File Server";
 			innerRedirect = commonUtil.commandHeader + " " + targetPath + "\\";
 			break;
 		default:
@@ -254,6 +259,8 @@ function addFoundPathesOfEachState(res, state, sortedFoundPathes){
 
 function addSortedFoundPathes(res){
 	var sortedFoundPathes = searchSortManager.getSortedFoundPathes();
+	//add file servers
+	addFoundPathesOfEachState(res, "server", sortedFoundPathes);
 	//add drives
 	addFoundPathesOfEachState(res, "drive", sortedFoundPathes);
 	//add folders
