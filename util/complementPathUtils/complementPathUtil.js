@@ -244,6 +244,7 @@ function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 	fs.stat(currentDirectory, function(err, stats){
 		if(err){
 			//console.log("err");
+			filterFileOrFolder(err, [], currentDirectory, "", res);
 		}else if(stats.isDirectory()){
 			//when only currentPath is folder
 			//exec fs.readdir (get child folder/files)
@@ -257,10 +258,10 @@ function complementFileOrFolder(currentDirectory, searchKeyword, res) {
 }
 
 var searchCandidates = function(formattedQuery, availableDrives, res){
-
 	var keywords = extractKeywords(formattedQuery);
 	var currentDirectory = keywords[0];
 	var searchKeyword = keywords[1];
+
 	//search available path to complement
 	//check if the current directory is empty or not
 	//empty (suggest available drives)

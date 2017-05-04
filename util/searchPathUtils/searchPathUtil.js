@@ -74,82 +74,67 @@ function listupSearchCandidatesAndDifferencesAllLayer(path){
 
 //wrapper function for recursive search
 //add to res in this function
-function outerRecursiveSearch(
-	path, searchCandidatesListsOfAllLayer, differencesListsOfAllLayer, res
-){
+function outerRecursiveSearch(path, searchCandidatesListsOfAllLayer, differencesListsOfAllLayer, res){
 	//inner function for recursive search
 	//add to res in this function
 	function innerRecursiveSearch(
-		difference, currentPath, searchCandidatesListsOfRemainingLayer,
-		differencesListsOfRemainingLayer, state
+		difference, currentPath, searchCandidatesListsOfRemainingLayer, differencesListsOfRemainingLayer, state
 	){
 		//main process
 		var lengthOfRemainingLayer = searchCandidatesListsOfRemainingLayer.length;
 		if(lengthOfRemainingLayer > 0){
+			//candidates
 			var targetSearchCandidatesList = searchCandidatesListsOfRemainingLayer[0];
-			var differencesList = differencesListsOfRemainingLayer[0];
-
 			let shiftedSearchCandidatesLists = searchCandidatesListsOfRemainingLayer.slice();
-			let shiftedDifferencesLists = differencesListsOfRemainingLayer.slice();
-
 			shiftedSearchCandidatesLists.shift();
+
+			//differences
+			var differencesList = differencesListsOfRemainingLayer[0];
+			let shiftedDifferencesLists = differencesListsOfRemainingLayer.slice();
 			shiftedDifferencesLists.shift();
+
+
 			for(var index = 0, lengthOfTargetList = targetSearchCandidatesList.length; index < lengthOfTargetList; index++){
-				let target = "";
-				let innerDifference = difference;
+				//set target path to check
+				let checkingAbsolutePath = "";
 				if(currentPath != ""){
-					target = target + currentPath + "\\";
+					checkingAbsolutePath = currentPath + "\\";
 				}
-				/*
-				res.add(
-					{
-						id: "",
-						payload: 'pending',
-						title: "currentPath",
-						desc: currentPath
-					}
-				);
-				*/
 				let fileOrFolderName = targetSearchCandidatesList[index];
-				target = target + fileOrFolderName;
-				innerDifference = innerDifference + differencesList[index];
-				fs.stat(target, function(err, stats){
+				checkingAbsolutePath += fileOrFolderName;
+
+				//set difference of checking path
+				let innerDifference = difference;
+				innerDifference += differencesList[index];
+
+				//check existence of checking path
+				fs.stat(checkingAbsolutePath, function(err, stats){
 					if(err){
 						//console.log("err");
 						progressManager.addProgressByRemainingList(shiftedSearchCandidatesLists);
 						//execute complement of path
-						//check progress
-						checkProgress(commonOriginalPath, commonRes);
 					}else{
 						if(stats.isFile() == true){
 							innerRecursiveSearch(
-								innerDifference, target, shiftedSearchCandidatesLists,
+								innerDifference, checkingAbsolutePath, shiftedSearchCandidatesLists,
 								shiftedDifferencesLists, "file"
 							);
 						}else if(stats.isDirectory() == true){
 							var folderType = commonSearchUtil.identifyFolderType(fileOrFolderName);
 							innerRecursiveSearch(
-								innerDifference, target, shiftedSearchCandidatesLists,
+								innerDifference, checkingAbsolutePath, shiftedSearchCandidatesLists,
 								shiftedDifferencesLists, folderType
 							);
 						}
 					}
-					/*
-					res.add(
-						{
-							id: "",
-							payload: 'pending',
-							title: target,
-							desc: path
-						}
-					);
-					*/
 					//check progress
 					checkProgress(commonOriginalPath, commonRes);
 				});
 			}
 		}else{// lengthOfRemainingLayer == 0
+			//check if currentPath is already checked
 			if(commonSearchedPathes.indexOf(currentPath) < 0){
+				//add result of search
 				commonSearchedPathes.push(currentPath);
 				commonSearchedDifferences.push(difference);
 
@@ -169,22 +154,12 @@ function outerRecursiveSearch(
 	var commonOriginalPath = path;
 	var commonRes = res;
 
-	innerRecursiveSearch(
-		0, "", searchCandidatesListsOfAllLayer,
-		differencesListsOfAllLayer, ""
-	);
+	//start recursive search
+	innerRecursiveSearch(0, "", searchCandidatesListsOfAllLayer, differencesListsOfAllLayer, "");
 }
 // param : "A A A\B BB\C  C"
 // return ["AAA\BBB\CC","AAA\B BB\C C"] <- available pathes removed unnecessary spaces
 var searchAvailablePathAsync = function(path, res){
-	//initialize foundPathes
-	/*
-	if(path.length > 0) {
-		var foundPathes = [];
-		var foundDifferences = [];
-	}
-	*/
-
 	//listup all layer
 	var candidatesAndDistancesListsOfAllLayer = listupSearchCandidatesAndDifferencesAllLayer(path);
 	//var searchCandidatesListOfAllLayer = listupSearchCandidatesAndDifferencesAllLayer(path);
