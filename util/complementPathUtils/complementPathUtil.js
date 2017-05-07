@@ -45,9 +45,9 @@ function evaluate(originalCandidate, keyword){
 	for(var indexOfKeyword = 0, lengthOfKeyword = keyword.length ; indexOfKeyword < lengthOfKeyword ; indexOfKeyword++){
 		var foundPos = innerOriginalCandidate.toLocaleLowerCase().indexOf(keyword[indexOfKeyword].toLocaleLowerCase());
 		if(foundPos == -1){
-			eval = eval - 1;
+			eval -= 1;
 		}else{
-			eval = eval + 1;
+			eval += 5/(foundPos + 1);
 			innerOriginalCandidate = innerOriginalCandidate.substring(foundPos + 1);
 		}
 	}
